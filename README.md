@@ -19,7 +19,7 @@ vue-longgaowall/
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
-└── pymongoddb/       # MongoDB 数据库 API 
+└── pymongodb/       # MongoDB 数据库 API 
 ```
 
 ## 功能特性
@@ -40,7 +40,7 @@ vue-longgaowall/
 
 - Node.js 18+
 - Python 3.11+
-- MongoDB（可选，用于 pymongoddb）
+- MongoDB（可选，目前未使用，仍在更新中）
 
 ### 安装依赖
 
@@ -93,21 +93,21 @@ VITE_STATIC_URL=/static/
 - CORS 配置
 - API 端点
 
-编辑 `backend/pymongoddb/.env` 修改以下配置：
+编辑 `backend/pymongodb/.env` 修改以下配置：
 
-- MongoDB api配置(具体见pymongoddb/)
+- MongoDB api配置(具体见[pymongodb仓库](https://github.com/renzhen666666/pymongodb))
 - smtp 配置
 
-### 使用 pymongoddb MongoDB API
+### 使用 pymongodb MongoDB API
 
 1. 确保 MongoDB 服务正在运行
-2. 配置 `pymongoddb/.env` 文件
-3. 启动 pymongoddb 服务：
+2. 配置 `pymongodb/.env` 文件
+3. 启动 pymongodb 服务：
    ```bash
-   cd pymongoddb
+   cd pymongodb
    python run.py
    ```
-4. 在 `backend/app.py` 中集成 pymongoddb API
+4. 在 `backend/app.py` 中集成 pymongodb API
 
 
 ## API 文档
