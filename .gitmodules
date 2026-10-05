@@ -1,0 +1,3 @@
+[submodule "pymongodb"]
+	path = pymongodb
+	url = https://github.com/renzhen666666/pymongodb.git

@@ -1,0 +1,16 @@
+# Netlify 部署配置
+#
+# 本仓库根目录是「后端 FastAPI + 前端 Vue」的混合结构，而 Netlify 只能托管静态前端，
+# 所以这里把构建范围限定在 frontend/ 子目录。
+# 注意：netlify.toml 的优先级高于 Netlify 网页端 Build settings，改这里即可生效。
+
+[build]
+  # 前端子目录（后面两条路径都相对它）
+  base = "frontend"
+  command = "npm run build"
+  # 构建产物目录 = frontend/dist
+  publish = "dist"
+
+[build.environment]
+  # Vite 7 要求 Node ^20.19 或 >=22.12，固定 22 防止 Netlify 默认版本过低导致构建失败
+  NODE_VERSION = "22"

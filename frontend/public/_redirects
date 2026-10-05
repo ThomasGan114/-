@@ -1,0 +1,4 @@
+# SPA 重写规则（vue-router 使用 history 模式）
+# 让 /vote、/wall/message/1 这类前端路由在直接访问或刷新时回退到 index.html，
+# 而不是被 Netlify 当成不存在的静态文件返回 404。
+/*    /index.html   200
