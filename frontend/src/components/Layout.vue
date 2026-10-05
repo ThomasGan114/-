@@ -85,7 +85,8 @@ const shouldOpenPublishModal = ref(false)
 
 const navItems = [
   { path: '/', label: '首页', icon: 'bi bi-house' },
-  { path: '/wall', label: '校园墙', icon: 'bi bi-chat-quote' }
+  { path: '/wall', label: '校园墙', icon: 'bi bi-chat-quote' },
+  { path: '/vote', label: '投票', icon: 'bi bi-bar-chart' }
   /*
   { path: '/p', label: '分区', icon: 'bi bi-tag' },
   { path: '/admin', label: '管理后台', icon: 'bi bi-gear', requiresAuth: true }
@@ -96,6 +97,7 @@ const currentPageTitle = computed(() => {
   const titles = {
     '/': '首页',
     '/wall': '校园墙',
+    '/vote': '投票',
     '/p': '分区',
     '/admin': '管理后台'
   }

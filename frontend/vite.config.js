@@ -13,6 +13,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    watch: {
+      // Windows 下 fs.watch 会对被占用的临时文件抛 EBUSY 并导致 dev server 整体退出
+      // （编辑器/工具写文件时生成的临时目录会触发），改用轮询监听可避免崩溃
+      usePolling: true
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5412',

@@ -17,6 +17,7 @@ import AdminLogin from './views/AdminLogin.vue'
 import Admin from './views/Admin.vue'
 import Partition from './views/Partition.vue'
 import UserProfile from './views/UserProfile.vue'
+import Vote from './views/Vote.vue'
 
 
 // 路由配置
@@ -26,6 +27,7 @@ const routes = [
   { path: '/wall/message/:id', name: 'MessageDetail', component: MessageDetail, props: true },
   { path: '/p/:tag?', name: 'Partition', component: Partition, props: true },
   { path: '/user/:id', name: 'UserProfile', component: UserProfile, props: true },
+  { path: '/vote', name: 'Vote', component: Vote },
 
   { path: '/admin', name: 'Admin', component: Admin, meta: { requiresAuth: true } },
   { path: '/admin/login', name: 'AdminLogin', component: AdminLogin },

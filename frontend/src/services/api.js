@@ -132,6 +132,17 @@ export default {
     return api.post('/api/notice')
   },
 
+  // 投票（预留：后端实现 /api/polls 后，把 services/polls.js 里的 USE_REMOTE_API 改成 true 即启用）
+  getPolls() {
+    return api.get('/api/polls')
+  },
+  createPoll(data) {
+    return api.post('/api/polls', data)
+  },
+  submitVote(pollId, data) {
+    return api.post(`/api/polls/${pollId}/vote`, data)
+  },
+
   // 管理员
   adminLogin(data) {
     const formData = new FormData()

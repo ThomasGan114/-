@@ -148,6 +148,57 @@
       </div>
     </section>
 
+    <!-- 免责声明 -->
+    <section class="disclaimer-section">
+      <div class="disclaimer-content">
+        <h2>免责声明</h2>
+        <p class="disclaimer-intro">
+          欢迎使用本校园墙网站（以下简称“本站”）。为保障平台正常运行并明确各方权利义务，请您在使用前仔细阅读以下免责声明。使用本站即视为您已充分理解并同意本声明全部内容。
+        </p>
+
+        <h3>一、平台性质</h3>
+        <p>本站仅作为校园信息交流与分享的中立平台，提供匿名或实名发布、浏览、互动等技术服务。本站不对用户发布的任何内容进行实质性审核或背书，也不对内容的真实性、准确性、完整性、合法性承担任何保证或连带责任。</p>
+
+        <h3>二、用户责任</h3>
+        <p>用户应对其发布的所有内容（包括但不限于文字、图片、链接、评论等）独立承担全部法律责任。</p>
+        <p>用户不得发布违反国家法律法规、公序良俗、校园规章制度的内容，包括但不限于：</p>
+        <ul>
+          <li>危害国家安全、煽动颠覆国家政权、宣扬恐怖主义、极端主义的信息；</li>
+          <li>侮辱、诽谤、造谣、侵犯他人名誉权、肖像权、隐私权、知识产权等合法权益的内容；</li>
+          <li>色情、暴力、赌博、毒品、诈骗等违法违规信息；</li>
+          <li>涉及人身攻击、恶意举报、散布谣言、扰乱校园秩序的内容。</li>
+        </ul>
+        <p>因用户发布内容引发的任何纠纷、投诉、诉讼或损失，均由发布者自行承担，本站不承担任何责任。</p>
+
+        <h3>三、内容管理与处理</h3>
+        <p>本站有权（但无义务）对涉嫌违规的内容进行删除、屏蔽、限制展示或封禁账号等处理，且无需事先通知。</p>
+        <p>本站不对内容删除后的任何后果（包括数据丢失、影响等）承担责任。</p>
+        <p>用户发现侵权或违规内容，可通过本站提供的举报渠道反馈，本站将在合理范围内予以处理，但不保证处理结果或时效。</p>
+
+        <h3>四、知识产权与授权</h3>
+        <p>用户发布内容即视为授予本站在全球范围内、免费、非独家、可转授权的使用权（包括展示、存储、复制、传播等），用于平台运营及必要的推广。</p>
+        <p>用户应保证其发布内容不侵犯第三方知识产权，否则由此产生的全部责任由用户自行承担。</p>
+
+        <h3>五、隐私与匿名</h3>
+        <p>本站尽力保护用户隐私，但因技术限制、系统故障、第三方攻击或用户自身操作等原因导致的信息泄露，本站不承担责任。</p>
+        <p>匿名发布并不意味着绝对匿名。在配合有权机关依法调查或处理严重违规行为时，本站可能依法提供必要信息。</p>
+
+        <h3>六、服务可用性与免责</h3>
+        <p>本站不保证服务的持续、稳定、无中断运行，因系统维护、升级、不可抗力、网络故障等原因导致的服务中断或数据丢失，本站不承担责任。</p>
+        <p>本站不对通过本站获取的任何信息、建议、链接等内容的适用性或后果承担责任。用户应自行判断并承担使用风险。</p>
+        <p>在法律允许的最大范围内，本站对因使用或无法使用本站服务而产生的任何直接、间接、附带、惩罚性损失不承担责任。</p>
+
+        <h3>七、其他</h3>
+        <p>本声明的解释权、修改权归本站所有。本站有权根据法律法规变化或运营需要随时更新本声明，更新后将在本站公示，继续使用即视为接受更新内容。</p>
+        <p>本声明未尽事宜，适用中华人民共和国相关法律法规。因本声明或本站服务产生的争议，由本站所在地有管辖权的人民法院管辖。</p>
+        <p>如本声明任何条款被认定为无效或不可执行，不影响其他条款的效力。</p>
+
+        <p class="disclaimer-note">
+          特别提示：请理性发言、文明互动，共同维护健康的校园交流环境。若您不同意本声明任何内容，请立即停止使用本站服务。
+        </p>
+      </div>
+    </section>
+
     <!-- Notice Modal -->
     <div class="modal fade" id="noticeModal" tabindex="-1" aria-labelledby="noticeModalLabel" aria-hidden="true" ref="noticeModal">
       <div class="modal-dialog modal-dialog-centered">
@@ -664,6 +715,63 @@ section {
 .contact-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
+}
+
+/* 免责声明 */
+.disclaimer-section {
+  background: #ffffff;
+}
+
+.disclaimer-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+  color: #444444;
+  font-size: 0.95rem;
+  line-height: 1.9;
+  text-align: left;
+}
+
+.disclaimer-content h2 {
+  margin-bottom: 16px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #333333;
+  text-align: center;
+}
+
+.disclaimer-intro {
+  color: #555555;
+}
+
+.disclaimer-content h3 {
+  margin: 22px 0 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #333333;
+}
+
+.disclaimer-content p {
+  margin: 0 0 8px;
+}
+
+.disclaimer-content ul {
+  margin: 0 0 8px;
+  padding-left: 22px;
+}
+
+.disclaimer-content li {
+  margin-bottom: 4px;
+}
+
+.disclaimer-content p.disclaimer-note {
+  margin: 22px 0 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--primary-color, #ff0073);
+  border-radius: 8px;
+  background: rgba(255, 0, 115, 0.06);
+  color: #333333;
+  font-weight: 500;
 }
 
 /* 「联系站长」按钮：点击展开邮箱，宽度随文案平滑拉伸 */
