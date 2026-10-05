@@ -60,7 +60,7 @@ export default {
                         data: {
                             id: 0,
                             nickname: '匿名用户',
-                            description: '龙高校园墙 Ciallo～(∠・ω< )⌒★',
+                            description: '深高园校园墙 Ciallo～(∠・ω< )⌒★',
                             following: [],
                             followers: [],
                             gender: 1

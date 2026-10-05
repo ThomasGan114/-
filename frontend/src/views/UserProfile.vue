@@ -388,7 +388,7 @@ onMounted(() => {
 
 .cover-photo {
   height: 200px;
-  background: linear-gradient(135deg, var(--primary-color, #6A0DAD) 0%, var(--primary-dark, #5a0b91) 100%);
+  background: linear-gradient(135deg, var(--primary-color, #FF0073) 0%, var(--primary-dark, #CC005C) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -482,7 +482,7 @@ onMounted(() => {
 }
 
 .meta-item i {
-  color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
 }
 
 .profile-actions {
@@ -510,12 +510,12 @@ onMounted(() => {
 }
 
 .btn-follow {
-  background: var(--primary-color, #6A0DAD);
+  background: var(--primary-color, #FF0073);
   color: white;
 }
 
 .btn-follow:hover {
-  background: var(--primary-dark, #5a0b91);
+  background: var(--primary-dark, #CC005C);
   transform: translateY(-2px);
 }
 
@@ -539,8 +539,8 @@ onMounted(() => {
 
 .btn-edit:hover {
   background: var(--primary-light);
-  color: var(--primary-color, #6A0DAD);
-  border-color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
+  border-color: var(--primary-color, #FF0073);
 }
 
 .btn-share {
@@ -551,8 +551,8 @@ onMounted(() => {
 
 .btn-share:hover {
   background: var(--primary-light);
-  color: var(--primary-color, #6A0DAD);
-  border-color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
+  border-color: var(--primary-color, #FF0073);
 }
 
 /* 统计数据 */
@@ -584,7 +584,7 @@ onMounted(() => {
   width: 56px;
   height: 56px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary-color, #6A0DAD) 0%, var(--primary-dark, #5a0b91) 100%);
+  background: linear-gradient(135deg, var(--primary-color, #FF0073) 0%, var(--primary-dark, #CC005C) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -631,7 +631,7 @@ onMounted(() => {
 }
 
 .section-title i {
-  color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
 }
 
 .details-grid {
@@ -657,7 +657,7 @@ onMounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary-color, #6A0DAD) 0%, var(--primary-dark, #5a0b91) 100%);
+  background: linear-gradient(135deg, var(--primary-color, #FF0073) 0%, var(--primary-dark, #CC005C) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -719,16 +719,16 @@ onMounted(() => {
 }
 
 .tab-btn:hover {
-  color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
 }
 
 .tab-btn.active {
-  color: var(--primary-color, #6A0DAD);
-  border-bottom-color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
+  border-bottom-color: var(--primary-color, #FF0073);
 }
 
 .tab-btn.active i {
-  color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
 }
 
 .social-content {

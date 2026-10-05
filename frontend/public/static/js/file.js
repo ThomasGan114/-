@@ -151,7 +151,7 @@ function handleFileSelect(event) {
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'btn btn-sm btn-close file-close-btn ms-2';
-        closeBtn.backgroundColor = '#6A0DAD';
+        closeBtn.backgroundColor = '#FF0073';
         closeBtn.type = 'button';
         closeBtn.setAttribute('aria-label', '移除文件');
 

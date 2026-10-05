@@ -1,6 +1,6 @@
-# 龙高校园墙 FastAPI 后端
+# 深高园校园墙 FastAPI 后端
 
-这是龙高校园墙的 FastAPI 版本后端，从 Flask 版本迁移而来。
+这是深高园校园墙的 FastAPI 版本后端，从 Flask 版本迁移而来。
 
 ## 功能特性
 

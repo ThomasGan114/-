@@ -182,14 +182,6 @@ function createMessageElement(message) {
     dropdownMenu.className = 'dropdown-menu';
     dropdownMenu.setAttribute('aria-labelledby', `dropdownMenuButton-${message.id}`);
 
-    const reportItem = document.createElement('li');
-    const reportLink = document.createElement('button');
-    reportLink.className = 'dropdown-item';
-    reportLink.setAttribute('onclick', `window.location.href = '/help/report/${message.id}';`);
-        
-    reportLink.textContent = '举报';
-    reportItem.appendChild(reportLink);
-
     const refreshItem = document.createElement('li');
     const refreshLink = document.createElement('button');
     refreshLink.className = 'dropdown-item';
@@ -205,7 +197,6 @@ function createMessageElement(message) {
     shareLink.textContent = '分享';
     shareItem.appendChild(shareLink);
 
-    dropdownMenu.appendChild(reportItem);
     dropdownMenu.appendChild(refreshItem);
     dropdownMenu.appendChild(shareItem);
 

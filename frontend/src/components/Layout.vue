@@ -19,7 +19,7 @@
           </button>
           <div class="logo">
             <i class="bi bi-house-door me-2"></i>
-            <span>龙*高校园墙</span>
+            <span>深高园校园墙</span>
           </div>
         </div>
 
@@ -85,9 +85,7 @@ const shouldOpenPublishModal = ref(false)
 
 const navItems = [
   { path: '/', label: '首页', icon: 'bi bi-house' },
-  { path: '/wall', label: '校园墙', icon: 'bi bi-chat-quote' },
-  { path: '/apps', label: '应用广场', icon: 'bi bi-grid' },
-  { path: '/help', label: '帮助', icon: 'bi bi-question-circle' }
+  { path: '/wall', label: '校园墙', icon: 'bi bi-chat-quote' }
   /*
   { path: '/p', label: '分区', icon: 'bi bi-tag' },
   { path: '/admin', label: '管理后台', icon: 'bi bi-gear', requiresAuth: true }
@@ -98,8 +96,6 @@ const currentPageTitle = computed(() => {
   const titles = {
     '/': '首页',
     '/wall': '校园墙',
-    '/apps': '应用广场',
-    '/help': '帮助中心',
     '/p': '分区',
     '/admin': '管理后台'
   }
@@ -108,7 +104,7 @@ const currentPageTitle = computed(() => {
       return title
     }
   }
-  return '龙高校园墙'
+  return '深高园校园墙'
 })
 
 const showPublishButton = computed(() => {
@@ -186,8 +182,8 @@ watch(theme, (newTheme) => {
 
 <style scoped>
 :root {
-  --primary-color: #6A0DAD;
-  --primary-light: rgba(106, 13, 173, 0.1);
+  --primary-color: #FF0073;
+  --primary-light: rgba(255, 0, 115, 0.1);
   --sidebar-width: 250px;
   --navbar-height: 64px;
   --content-max-width: 1200px;
@@ -357,13 +353,13 @@ watch(theme, (newTheme) => {
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(106, 13, 173, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 0, 115, 0.3);
 }
 
 .btn-publish:hover {
-  background-color: #5a0b91;
+  background-color: #CC005C;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 0, 115, 0.4);
 }
 
 /* 左侧边栏 */

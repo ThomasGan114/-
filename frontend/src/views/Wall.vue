@@ -596,9 +596,9 @@ onUnmounted(() => {
 
 <style scoped>
 :root {
-  --primary-color: #6A0DAD;
-  --primary-light: rgba(106, 13, 173, 0.1);
-  --primary-dark: #5a0b91;
+  --primary-color: #FF0073;
+  --primary-light: rgba(255, 0, 115, 0.1);
+  --primary-dark: #CC005C;
 }
 
 .wall-page {
@@ -813,7 +813,7 @@ onUnmounted(() => {
   border-radius: 50%;
   cursor: pointer;
   font-size: 1.5rem;
-  box-shadow: 0 4px 20px rgba(106, 13, 173, 0.4);
+  box-shadow: 0 4px 20px rgba(255, 0, 115, 0.4);
   transition: all 0.3s;
   display: flex;
   align-items: center;
@@ -826,7 +826,7 @@ onUnmounted(() => {
 .fab:hover {
   background: var(--primary-dark);
   transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 25px rgba(106, 13, 173, 0.5);
+  box-shadow: 0 6px 25px rgba(255, 0, 115, 0.5);
 }
 
 /* 向上按钮特有样式 */

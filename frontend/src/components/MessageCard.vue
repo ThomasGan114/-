@@ -22,6 +22,7 @@
                 :alt="file"
                 class="file-image"
                 loading="lazy"
+                @error="onFileImageError($event, file)"
               >
             </div>
             <!-- 视频缩略图 -->
@@ -109,9 +110,6 @@
           <i class="bi bi-three-dots"></i>
         </button>
         <div v-if="showMenu" class="action-menu" ref="menu">
-          <button class="menu-item" @click="handleReport">
-            <i class="bi bi-flag me-2"></i>举报
-          </button>
           <button class="menu-item" @click="handleRefresh">
             <i class="bi bi-arrow-clockwise me-2"></i>刷新
           </button>
@@ -300,6 +298,18 @@ const getFileTinyUrl = (file) => {
   return staticUrl + 'tiny_files/' + file
 }
 
+const getFileUploadUrl = (file) => {
+  return staticUrl + 'uploads/' + file
+}
+
+// 缩略图不存在时回退到原图，避免整张图裂开
+const onFileImageError = (event, file) => {
+  const img = event.target
+  if (!img || img.dataset.fallback) return
+  img.dataset.fallback = '1'
+  img.src = getFileUploadUrl(file)
+}
+
 const isImage = (file) => {
   const ext = file.split('.').pop().toLowerCase()
   return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)
@@ -407,11 +417,6 @@ const closeMenu = () => {
   showMenu.value = false
 }
 
-const handleReport = () => {
-  closeMenu()
-  router.push(`/help/report/${props.message.id}`)
-}
-
 const handleRefresh = () => {
   closeMenu()
   emit('refresh', props.message.id)
@@ -477,9 +482,9 @@ nextTick(() => {
 
 <style scoped>
 :root {
-  --primary-color: #6A0DAD;
-  --primary-light: rgba(106, 13, 173, 0.1);
-  --primary-dark: #5a0b91;
+  --primary-color: #FF0073;
+  --primary-light: rgba(255, 0, 115, 0.1);
+  --primary-dark: #CC005C;
 }
 
 .message-card {
@@ -537,7 +542,7 @@ nextTick(() => {
 }
 
 .action-menu-btn:hover {
-  background: var(--hover-bg, rgba(106, 13, 173, 0.05));
+  background: var(--hover-bg, rgba(255, 0, 115, 0.05));
   color: var(--primary-color);
 }
 
@@ -570,7 +575,7 @@ nextTick(() => {
 }
 
 .menu-item:hover {
-  background: var(--hover-bg, rgba(106, 13, 173, 0.05));
+  background: var(--hover-bg, rgba(255, 0, 115, 0.05));
 }
 
 .card-body {
@@ -657,7 +662,7 @@ nextTick(() => {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1) 0%, rgba(106, 13, 173, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 0, 115, 0.1) 0%, rgba(255, 0, 115, 0.05) 100%);
   opacity: 0;
   transition: opacity 0.3s;
 }

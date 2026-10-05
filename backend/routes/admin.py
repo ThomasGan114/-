@@ -143,24 +143,6 @@ async def admin_admin_log(request: Request, search: str = ""):
     return {"log_content": content, "search_query": search}
 
 
-@router.get("/report")
-async def admin_report(request: Request):
-    """查看举报"""
-    admin_user, admin_password = get_admin_session(request)
-    if not verify_admin(admin_user, admin_password):
-        return RedirectResponse(url='/admin/login', status_code=302)
-    
-    report_path = os.path.join('help', 'report.json')
-    if not os.path.exists(report_path):
-        return {"message_ids": [], "reports": {}}
-    
-    with open(report_path, 'r', encoding='utf-8') as f:
-        reports_dict = json.load(f)
-    
-    message_ids = list(reports_dict.keys())
-    return {"message_ids": message_ids, "reports": reports_dict}
-
-
 @router.post("/delete_message/{message_id}")
 async def delete_message(message_id: int, request: Request):
     """删除消息"""
@@ -180,18 +162,8 @@ async def delete_message(message_id: int, request: Request):
     try:
         result = mm.delete_message(message_id)
         
-        # 从举报列表移除
-        report_path = os.path.join('help', 'report.json')
-        if os.path.exists(report_path):
-            with open(report_path, 'r', encoding='utf-8') as f:
-                report_dict = json.load(f)
-            if str(message_id) in report_dict:
-                del report_dict[str(message_id)]
-            with open(report_path, 'w', encoding='utf-8') as f:
-                json.dump(report_dict, f, indent=4, ensure_ascii=False)
-        
         if result['success']:
-            log_msg = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}    {admin_user}删除了龙高墙的消息 {message_id}"
+            log_msg = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}    {admin_user}删除了深高园校园墙的消息 {message_id}"
             log_admin_data(log_msg)
         
         return result
@@ -223,64 +195,6 @@ async def delete_comment(message_id: int, comment_id: str, request: Request):
         return result
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-
-@router.post("/api/delete_report/{message_id}/{report_id}")
-async def admin_delete_reports(message_id: str, report_id: str, request: Request):
-    """删除举报"""
-    admin_user, admin_password = get_admin_session(request)
-    if not verify_admin(admin_user, admin_password):
-        return {"success": False, "error": "请先登录"}
-    
-    report_path = os.path.join('help', 'report.json')
-    processed_path = os.path.join('help', 'processed_report.json')
-    
-    permissions = get_admin_user_permissions(admin_user)
-    
-    if not check_permission(permissions, "view_report"):
-        return {"success": False, "error": "无权限"}
-    
-
-    if not os.path.exists(report_path):
-        return {"success": False, "error": "举报不存在"}
-    
-    with open(report_path, 'r', encoding='utf-8') as f:
-        report_dict = json.load(f)
-    
-    if message_id not in report_dict:
-        return {"success": False, "error": "举报不存在"}
-    
-    # 找到并移除举报
-    report = None
-    for r in report_dict[message_id]:
-        if r['id'] == report_id:
-            report = r
-            break
-    
-    if report:
-        report_dict[message_id].remove(report)
-        if not report_dict[message_id]:
-            del report_dict[message_id]
-        
-        with open(report_path, 'w', encoding='utf-8') as f:
-            json.dump(report_dict, f, ensure_ascii=False, indent=4)
-        
-        # 添加到已处理列表
-        if os.path.exists(processed_path):
-            with open(processed_path, 'r', encoding='utf-8') as f:
-                processed_report = json.load(f)
-        else:
-            processed_report = {}
-        
-        processed_report[message_id] = processed_report.get(message_id, [])
-        processed_report[message_id].append(report)
-        
-        with open(processed_path, 'w', encoding='utf-8') as f:
-            json.dump(processed_report, f, ensure_ascii=False, indent=4)
-        
-        return {"success": True}
-    else:
-        return {"success": False, "error": "举报不存在"}
 
 
 @router.get("/api/messages")

@@ -96,6 +96,8 @@ async def lifespan(app: FastAPI):
     os.makedirs(config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(config['CHUNK_FOLDER'], exist_ok=True)
     os.makedirs(config['AVATAR_FOLDER'], exist_ok=True)
+    # 缩略图目录：以前启动时没建，缩略图生成会在后台线程里静默失败
+    os.makedirs(os.path.join('static', 'tiny_files'), exist_ok=True)
     
     logger.info("应用初始化完成")
     
@@ -107,8 +109,8 @@ async def lifespan(app: FastAPI):
 
 # 创建 FastAPI 应用
 app = FastAPI(
-    title="龙高校园墙 API",
-    description="龙高校园墙后端服务 - FastAPI 版本",
+    title="深高园校园墙 API",
+    description="深高园校园墙后端服务 - FastAPI 版本",
     version="2.0.0",
     lifespan=lifespan
 )
@@ -237,7 +239,7 @@ async def merge_chunks(request: Request):
             filename = change_image_file_extension(config['UPLOAD_FOLDER'], filename)
         
         # 异步生成缩略图
-        thread = Thread(target=making_tiny_files, args=(filename,))
+        thread = Thread(target=making_tiny_files, args=([filename],))
         thread.start()
         
         # 清理元数据
@@ -277,7 +279,7 @@ async def direct_upload(
             filename = change_video_file_extension(config['UPLOAD_FOLDER'], filename)
         
         # 异步生成缩略图
-        thread = Thread(target=making_tiny_files, args=(filename,))
+        thread = Thread(target=making_tiny_files, args=([filename],))
         thread.start()
         
         return {"success": True, "filenames": [filename]}

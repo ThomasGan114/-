@@ -22,11 +22,6 @@
                 </router-link>
               </li>
               <li class="nav-item mb-2">
-                <router-link to="/admin/report" class="nav-link text-white" :class="{ active: $route.path === '/admin/report' }">
-                  <i class="bi bi-flag me-2"></i>举报管理
-                </router-link>
-              </li>
-              <li class="nav-item mb-2">
                 <router-link to="/admin/log" class="nav-link text-white" :class="{ active: $route.path === '/admin/log' }">
                   <i class="bi bi-file-text me-2"></i>日志查看
                 </router-link>
@@ -49,7 +44,7 @@
             
             <!-- 快捷操作 -->
             <div class="row g-4 mb-4">
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <router-link to="/admin/wall" class="text-decoration-none">
                   <div class="card quick-card">
                     <div class="card-body text-center">
@@ -60,7 +55,7 @@
                   </div>
                 </router-link>
               </div>
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <router-link to="/admin/notice" class="text-decoration-none">
                   <div class="card quick-card">
                     <div class="card-body text-center">
@@ -71,18 +66,7 @@
                   </div>
                 </router-link>
               </div>
-              <div class="col-md-3">
-                <router-link to="/admin/report" class="text-decoration-none">
-                  <div class="card quick-card">
-                    <div class="card-body text-center">
-                      <i class="bi bi-flag fs-1 text-danger"></i>
-                      <h5 class="mt-2">举报管理</h5>
-                      <small class="text-muted">处理用户举报</small>
-                    </div>
-                  </div>
-                </router-link>
-              </div>
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <router-link to="/admin/log" class="text-decoration-none">
                   <div class="card quick-card">
                     <div class="card-body text-center">
@@ -98,7 +82,7 @@
             <!-- 统计数据 -->
             <h4 class="mb-3">数据统计</h4>
             <div class="row g-4">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="card stat-card">
                   <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -113,7 +97,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="card stat-card">
                   <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -123,21 +107,6 @@
                       <div class="ms-3">
                         <h6 class="text-muted mb-1">今日留言</h6>
                         <h3 class="mb-0">{{ stats.todayMessages }}</h3>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card stat-card">
-                  <div class="card-body">
-                    <div class="d-flex align-items-center">
-                      <div class="stat-icon bg-danger">
-                        <i class="bi bi-flag"></i>
-                      </div>
-                      <div class="ms-3">
-                        <h6 class="text-muted mb-1">待处理举报</h6>
-                        <h3 class="mb-0">{{ stats.pendingReports }}</h3>
                       </div>
                     </div>
                   </div>
@@ -192,8 +161,7 @@ const router = useRouter()
 const username = ref(localStorage.getItem('admin_user') || '管理员')
 const stats = ref({
   totalMessages: 0,
-  todayMessages: 0,
-  pendingReports: 0
+  todayMessages: 0
 })
 const recentLogs = ref([])
 const loadingLogs = ref(false)
@@ -207,19 +175,6 @@ const handleLogout = async () => {
     localStorage.removeItem('admin_user')
     localStorage.removeItem('admin_password')
     router.push('/admin/login')
-  }
-}
-
-const loadStats = async () => {
-  try {
-    // 获取举报数量
-    const reportRes = await api.adminGetReport()
-    if (reportRes.data) {
-      const reports = reportRes.data.reports || {}
-      stats.value.pendingReports = Object.keys(reports).length
-    }
-  } catch (error) {
-    console.error('加载统计数据失败:', error)
   }
 }
 
@@ -239,7 +194,6 @@ const loadRecentLogs = async () => {
 }
 
 onMounted(() => {
-  loadStats()
   loadRecentLogs()
 })
 </script>
@@ -266,7 +220,7 @@ onMounted(() => {
 }
 
 .nav-link.active {
-  background-color: #6A0DAD;
+  background-color: #FF0073;
 }
 
 .admin-content {
@@ -307,7 +261,7 @@ onMounted(() => {
 }
 
 .stat-icon.bg-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FF4D9E 0%, #CC005C 100%);
 }
 
 .stat-icon.bg-success {

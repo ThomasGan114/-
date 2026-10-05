@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded',  function() {
             
             // 随机颜色
             const colors = [
-                '#9B59B6', '#8A2BE2', '#6A0DAD', 
+                '#FF0073', '#FF4D9E', '#FF0073', 
                 '#4ECDC4', '#45B7D1', '#96CEB4', 
                 '#FECA57', '#FF6B6B', '#FF9FF3'
             ];

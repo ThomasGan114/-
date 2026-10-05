@@ -13,8 +13,6 @@ import '@icon-park/vue-next/styles/index.css'
 import Home from './views/Home.vue'
 import Wall from './views/Wall.vue'
 import MessageDetail from './views/MessageDetail.vue'
-import Help from './views/Help.vue'
-import Apps from './views/Apps.vue'
 import AdminLogin from './views/AdminLogin.vue'
 import Admin from './views/Admin.vue'
 import Partition from './views/Partition.vue'
@@ -29,17 +27,10 @@ const routes = [
   { path: '/p/:tag?', name: 'Partition', component: Partition, props: true },
   { path: '/user/:id', name: 'UserProfile', component: UserProfile, props: true },
 
-  { path: '/help', name: 'Help', component: Help },
-  { path: '/help/form', name: 'HelpForm', component: () => import('./views/HelpForm.vue') },
-  { path: '/help/report/:id', name: 'Report', component: () => import('./views/Report.vue'), props: true },
-  { path: '/help/success', name: 'HelpSuccess', component: () => import('./views/HelpSuccess.vue') },
-  { path: '/apps', name: 'Apps', component: Apps },
-
   { path: '/admin', name: 'Admin', component: Admin, meta: { requiresAuth: true } },
   { path: '/admin/login', name: 'AdminLogin', component: AdminLogin },
   { path: '/admin/wall', name: 'AdminWall', component: () => import('./views/AdminWall.vue'), meta: { requiresAuth: true } },
   { path: '/admin/notice', name: 'AdminNotice', component: () => import('./views/AdminNotice.vue'), meta: { requiresAuth: true } },
-  { path: '/admin/report', name: 'AdminReport', component: () => import('./views/AdminReport.vue'), meta: { requiresAuth: true } },
   { path: '/admin/log', name: 'AdminLog', component: () => import('./views/AdminLog.vue'), meta: { requiresAuth: true } },
   { path: '/admin/error_log', name: 'AdminErrorLog', component: () => import('./views/AdminErrorLog.vue'), meta: { requiresAuth: true } },
 

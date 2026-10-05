@@ -94,21 +94,42 @@ def change_file_extension(path: str, file: str, new_extension: str) -> str:
     return f"{root}.{new_extension}"
 
 
-def making_tiny_files(filenames: List[str], tiny_folder: str = "static/tiny_files"):
-    """生成缩略图文件"""
+def making_tiny_files(filenames, tiny_folder: str = "static/tiny_files"):
+    """生成缩略图文件
+
+    filenames 允许传单个字符串或字符串列表：早期 app.py 传过裸字符串，
+    而 sort_files 是按元素遍历的，字符串会被逐字符拆分，于是一张缩略图
+    都生成不出来且完全静默（线程里不报错）。这里做一次归一化，
+    同时确保输出目录存在（此前 static/tiny_files 从未被创建，
+    即便真的走到 resize_image 也会因 FileNotFoundError 静默失败）。
+    """
+    if isinstance(filenames, str):
+        filenames = [filenames]
+    filenames = list(filenames or [])
+    if not filenames:
+        return []
+
     image_files, video_files = sort_files(filenames)
     upload_folder = settings.UPLOAD_FOLDER
-    
+    os.makedirs(tiny_folder, exist_ok=True)
+
+    done = []
     for image_file in image_files:
-        resize_image(
-            os.path.join(upload_folder, image_file),
-            os.path.join(tiny_folder, image_file)
-        )
+        try:
+            resize_image(
+                os.path.join(upload_folder, image_file),
+                os.path.join(tiny_folder, image_file)
+            )
+            done.append(image_file)
+        except Exception as e:
+            print(f"生成图片缩略图失败 {image_file}: {e}")
     for video_file in video_files:
-        compress_video(
+        if compress_video(
             os.path.join(upload_folder, video_file),
             os.path.join(tiny_folder, video_file)
-        )
+        ):
+            done.append(video_file)
+    return done
 
 
 def compress_video(input_file: str, output_file: str, fps: int = 24, height: int = 100) -> bool:

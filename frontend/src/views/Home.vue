@@ -5,7 +5,7 @@
       <div class="hero-content">
         <div class="hero-text">
           <h1 class="hero-title">欢迎来到</h1>
-          <h2 class="hero-subtitle">龙 * 高级中学</h2>
+          <h2 class="hero-subtitle">深圳市高级中学高中园</h2>
           <h3 class="hero-subtitle-light">校园墙</h3>
           <div class="run-time">
             <span class="run-time-label">本站已运行</span>
@@ -16,7 +16,7 @@
           </div>
           <router-link to="/wall" class="hero-button">
             <i class="bi bi-arrow-right-circle me-2"></i>
-            前往龙高校园墙
+            前往深高园校园墙
           </router-link>
         </div>
       </div>
@@ -118,16 +118,32 @@
     <section class="about-section">
       <div class="about-content">
         <h2>关于本站</h2>
-        <p>本站由龙高一名学生搭建，旨在为同学们提供一个快捷自由表达的平台。</p>
+        <p>本站由龙高一名学生编写 深高园一名学生搭建，旨在为同学们提供一个快捷自由表达的平台。</p>
         <div class="about-links">
           <a href="https://github.com/renzhen666666/campusWall" target="_blank" rel="noopener">
             <i class="bi bi-github"></i>
             GitHub
           </a>
-          <a href="mailto:w-rz@outlook.com">
-            <i class="bi bi-envelope"></i>
-            联系站长
-          </a>
+          <button
+            type="button"
+            class="contact-btn"
+            :class="{ 'is-open': showEmail }"
+            :style="contactWidth ? { width: contactWidth } : null"
+            :aria-expanded="showEmail ? 'true' : 'false'"
+            aria-label="联系站长"
+            :title="showEmail ? '再点一下收起' : '点击显示站长邮箱'"
+            ref="contactBtn"
+            @click="toggleContact"
+          >
+            <span class="contact-face contact-face-label" ref="contactLabel">
+              <i class="bi bi-envelope"></i>
+              <span>联系站长</span>
+            </span>
+            <span class="contact-face contact-face-email" ref="contactEmailEl">
+              <i class="bi bi-envelope-open"></i>
+              <span>{{ contactEmail }}</span>
+            </span>
+          </button>
         </div>
       </div>
     </section>
@@ -182,7 +198,8 @@ const noticeModal = ref(null)
 let runTimeInterval = null
 
 const updateRunTime = () => {
-  const startDate = new Date(2025,7,21,13,37,11);
+  // 计时起点（2026-10-04 22:48:39 重置，从零开始）
+  const startDate = new Date(2026,9,4,22,48,39);
   const now = new Date()
   const diff = now - startDate
   runTime.value.days = Math.floor(diff / (1000 * 60 * 60 * 24))
@@ -250,18 +267,46 @@ const formatTime = (time) => {
   return dayjs(time).fromNow()
 }
 
+// 「联系站长」：点一下展开邮箱，再点还原；按钮宽度随文案平滑拉伸
+const contactEmail = ref('thomasgan@126.com')
+const showEmail = ref(false)
+const contactWidth = ref('')
+const contactBtn = ref(null)
+const contactLabel = ref(null)
+const contactEmailEl = ref(null)
+
+const measureContactWidth = () => {
+  if (!contactBtn.value || !contactLabel.value || !contactEmailEl.value) return
+  const styles = getComputedStyle(contactBtn.value)
+  const padding = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0)
+  const target = showEmail.value ? contactEmailEl.value : contactLabel.value
+  contactWidth.value = `${Math.ceil(target.getBoundingClientRect().width + padding)}px`
+}
+
+const toggleContact = () => {
+  showEmail.value = !showEmail.value
+  measureContactWidth()
+}
+
 onMounted(() => {
   updateRunTime()
   runTimeInterval = setInterval(updateRunTime, 1000)
   loadHotMessages()
   loadNotice()
   showNoticeModal()
+
+  measureContactWidth()
+  window.addEventListener('resize', measureContactWidth)
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(measureContactWidth)
+  }
 })
 
 onUnmounted(() => {
   if (runTimeInterval) {
     clearInterval(runTimeInterval)
   }
+  window.removeEventListener('resize', measureContactWidth)
 })
 </script>
 
@@ -272,9 +317,9 @@ onUnmounted(() => {
 }
 
 :root {
-  --primary-color: #6A0DAD;
-  --primary-light: rgba(106, 13, 173, 0.1);
-  --primary-dark: #5a0b91;
+  --primary-color: #FF0073;
+  --primary-light: rgba(255, 0, 115, 0.1);
+  --primary-dark: #CC005C;
 }
 
 /* Hero Section */
@@ -412,7 +457,7 @@ section {
 
 .feature-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(106, 13, 173, 0.15);
+  box-shadow: 0 8px 25px rgba(255, 0, 115, 0.15);
 }
 
 .feature-icon {
@@ -601,7 +646,8 @@ section {
   flex-wrap: wrap;
 }
 
-.about-links a {
+.about-links a,
+.contact-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -610,13 +656,68 @@ section {
   color: white;
   text-decoration: none;
   border-radius: 50px;
-  transition: all 0.3s;
   backdrop-filter: blur(10px);
+  transition: background-color 0.3s, transform 0.3s;
 }
 
-.about-links a:hover {
+.about-links a:hover,
+.contact-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
+}
+
+/* 「联系站长」按钮：点击展开邮箱，宽度随文案平滑拉伸 */
+.contact-btn {
+  position: relative;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: width 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.3s,
+              transform 0.3s;
+}
+
+.contact-face {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  white-space: nowrap;
+  transition: opacity 0.28s ease, transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.contact-face-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.contact-face-email {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) translateX(-16px);
+}
+
+.contact-btn.is-open .contact-face-label {
+  opacity: 0;
+  transform: translateX(16px);
+}
+
+.contact-btn.is-open .contact-face-email {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-btn,
+  .contact-face {
+    transition-duration: 0.01ms;
+  }
 }
 
 /* Modal */
@@ -628,7 +729,7 @@ section {
 
 .modal-header {
   background: var(--primary-light);
-  border-bottom: 1px solid rgba(106, 13, 173, 0.1);
+  border-bottom: 1px solid rgba(255, 0, 115, 0.1);
 }
 
 .modal-title {

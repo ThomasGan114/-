@@ -118,7 +118,7 @@ onMounted(() => {
 .user-card-mini:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
-  border-color: var(--primary-color, #6A0DAD);
+  border-color: var(--primary-color, #FF0073);
 }
 
 .avatar-wrapper {
@@ -202,7 +202,7 @@ onMounted(() => {
 
 .stat i {
   font-size: 0.85rem;
-  color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
 }
 
 .btn-follow {
@@ -211,7 +211,7 @@ onMounted(() => {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: var(--primary-color, #6A0DAD);
+  background: var(--primary-color, #FF0073);
   color: white;
   cursor: pointer;
   display: flex;
@@ -222,7 +222,7 @@ onMounted(() => {
 }
 
 .btn-follow:hover {
-  background: var(--primary-dark, #5a0b91);
+  background: var(--primary-dark, #CC005C);
   transform: scale(1.1);
 }
 

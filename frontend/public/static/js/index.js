@@ -10,7 +10,7 @@ async function flashMessage(text) {
 
 
 function calculateUptime() {
-    const launchDate = new Date(2025, 7, 21, 13, 37, 11);
+    const launchDate = new Date(2026, 9, 4, 22, 48, 39);
     const now = new Date();
     const diff = now - launchDate;
 
@@ -104,7 +104,7 @@ function createHotMessageElement(message) {
 
     const badge = document.createElement('span');
     badge.className = 'badge';
-    badge.style.backgroundColor = '#6A0DAD';
+    badge.style.backgroundColor = '#FF0073';
     badge.textContent = message.timestamp;
 
     badgeContainer.appendChild(badge);

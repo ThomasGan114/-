@@ -132,31 +132,6 @@ export default {
     return api.post('/api/notice')
   },
 
-  // 应用
-  getApps() {
-    return api.post('/api/apps')
-  },
-
-  // 帮助和反馈
-  submitHelp(data) {
-    const formData = new FormData()
-    formData.append('title', data.title)
-    formData.append('email', data.email)
-    formData.append('text', data.text)
-    return api.post('/help/form', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
-  submitReport(messageId, data) {
-    const formData = new FormData()
-    formData.append('text', data.text)
-    formData.append('email', data.email)
-    formData.append('category', data.category)
-    return api.post(`/help/report/${messageId}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-  },
-
   // 管理员
   adminLogin(data) {
     const formData = new FormData()
@@ -209,14 +184,6 @@ export default {
     return api.post('/api/admin/notice', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
-  },
-
-  // 举报管理
-  adminGetReport() {
-    return api.get('/api/admin/report')
-  },
-  adminDeleteReport(messageId, reportId) {
-    return api.post(`api/admin/api/delete_report/${messageId}/${reportId}`)
   },
 
   // 日志管理

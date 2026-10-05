@@ -1,13 +1,13 @@
 :root {
-    --primary-color: #9B59B6 ;
-    --secondary-color: #8A2BE2 ;
+    --primary-color: #FF0073 ;
+    --secondary-color: #FF4D9E ;
     --text-color: #e0e0e0;
 
     --font-color: #e0e0e0;
     --background-color: #121212;
     --card-background: #1e1e1e;
     --box-background: #151515;
-    --border-color: rgba(106, 13, 173, 0.3);
+    --border-color: rgba(255, 0, 115, 0.3);
     --shadow-color: rgba(0, 0, 0, 0.3);
     --comment-background: linear-gradient(135deg, #1e1e1e 0%, #252525 100%);
 
@@ -16,8 +16,8 @@
 }
 
 [data-theme="light"] {
-    --primary-color: #6A0DAD;
-    --secondary-color: #9B59B6;
+    --primary-color: #FF0073;
+    --secondary-color: #FF0073;
 
     --text-color: #333;
     --font-color: #333;
@@ -28,14 +28,14 @@
     --box-background: #fafafa;
     --box-text: #6c757d;
 
-    --border-color: rgba(106, 13, 173, 0.1);
-    --shadow-color: rgba(106, 13, 173, 0.1);
+    --border-color: rgba(255, 0, 115, 0.1);
+    --shadow-color: rgba(255, 0, 115, 0.1);
     --comment-background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
 }
 
 [data-theme="dark"] {
-    --primary-color: #9B59B6 ;
-    --secondary-color: #8A2BE2 ;
+    --primary-color: #FF0073 ;
+    --secondary-color: #FF4D9E ;
 
     --text-color: #e0e0e0;
     --font-color: #e0e0e0;
@@ -46,7 +46,7 @@
     --box-background: #151515;
     --box-text: #ffffffc7;
 
-    --border-color: rgba(106, 13, 173, 0.3);
+    --border-color: rgba(255, 0, 115, 0.3);
     --shadow-color: rgba(0, 0, 0, 0.3);
     --comment-background: linear-gradient(135deg, #1e1e1e 0%, #252525 100%);
 }
@@ -194,7 +194,7 @@ main.container {
     width: 100% !important;
     z-index: 1000 !important;
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
-    box-shadow: 0 2px 15px rgba(106, 13, 173, 0.2) !important;
+    box-shadow: 0 2px 15px rgba(255, 0, 115, 0.2) !important;
     padding: 1rem 0 !important;
 }
 
@@ -242,7 +242,7 @@ main.container {
 
 .btn-primary:hover {
     transform: scale(1.05) !important;
-    box-shadow: 0 4px 10px rgba(106, 13, 173, 0.3) !important;
+    box-shadow: 0 4px 10px rgba(255, 0, 115, 0.3) !important;
 }
 
 .btn-outline-primary {

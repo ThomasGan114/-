@@ -104,8 +104,8 @@ onMounted(() => {
 }
 
 .user-card-simple:hover {
-  background: var(--hover-bg, rgba(106, 13, 173, 0.05));
-  border-color: var(--primary-color, #6A0DAD);
+  background: var(--hover-bg, rgba(255, 0, 115, 0.05));
+  border-color: var(--primary-color, #FF0073);
   transform: translateY(-1px);
 }
 
@@ -136,7 +136,7 @@ onMounted(() => {
   height: 26px;
   border-radius: 50%;
   border: none;
-  background: var(--primary-color, #6A0DAD);
+  background: var(--primary-color, #FF0073);
   color: white;
   cursor: pointer;
   display: flex;
@@ -148,7 +148,7 @@ onMounted(() => {
 }
 
 .btn-follow:hover {
-  background: var(--primary-dark, #5a0b91);
+  background: var(--primary-dark, #CC005C);
   transform: scale(1.1);
 }
 

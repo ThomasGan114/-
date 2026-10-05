@@ -3,8 +3,6 @@ API 路由 - 静态文件和消息相关
 """
 import os
 import json
-import uuid
-from datetime import datetime
 from typing import Optional, List
 
 from fastapi import APIRouter, Request, Query, Form, File, UploadFile, Depends, HTTPException
@@ -19,21 +17,6 @@ from deps import get_message_manager, get_notices
 
 settings = get_settings()
 router = APIRouter()
-
-
-@router.post("/apps")
-async def get_apps():
-    """获取应用列表"""
-    apps = []
-    apps_dir = os.path.join('static', 'apps')
-    if os.path.exists(apps_dir):
-        for app in os.listdir(apps_dir):
-            config_path = os.path.join(apps_dir, app, 'config.json')
-            if os.path.exists(config_path):
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                    apps.append(config)
-    return {"success": True, "apps": apps}
 
 
 @router.get("/static/tiny_files/{filename}")
@@ -186,76 +169,3 @@ async def get_hot_messages(request: Request):
         "messages": mm.get_hot_messages(like_list=likes_list, dislike_list=dislikes_list)
     }
 
-
-@router.post("/help/form")
-async def help_post(
-    title: str = Form(default=""),
-    email: str = Form(default=""),
-    text: str = Form(default="")
-):
-    """提交帮助表单"""
-    if not text:
-        return {"success": False, "error": "请填写内容"}
-    
-    report = {
-        'id': uuid.uuid4().hex,
-        'title': title,
-        'email': email,
-        'text': text,
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    
-    help_path = os.path.join('help', 'help.json')
-    if os.path.exists(help_path):
-        with open(help_path, 'r', encoding='utf-8') as f:
-            help_dict = json.load(f)
-    else:
-        help_dict = []
-    
-    help_dict.append(report)
-    
-    with open(help_path, 'w', encoding='utf-8') as f:
-        json.dump(help_dict, f, ensure_ascii=False, indent=4)
-    
-    return {"success": True}
-
-
-@router.post("/help/report/{message_id}")
-async def help_report_post(
-    message_id: str,
-    text: str = Form(default=""),
-    email: str = Form(default=""),
-    category: str = Form(default="other")
-):
-    """举报消息"""
-    categorys = {
-        "spam": "垃圾信息",
-        "abuse": "恶意行为",
-        "other": "其他"
-    }
-    category_text = categorys.get(category, '其他')
-    
-    if text:
-        report_path = os.path.join('help', 'report.json')
-        if os.path.exists(report_path):
-            with open(report_path, 'r', encoding='utf-8') as f:
-                report_dict = json.load(f)
-        else:
-            report_dict = {}
-        
-        report_dict[message_id] = report_dict.get(message_id, [])
-        
-        report = {
-            'id': uuid.uuid4().hex,
-            'text': text,
-            'email': email,
-            'category': category_text,
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        report_dict[message_id].append(report)
-        
-        with open(report_path, 'w', encoding='utf-8') as f:
-            json.dump(report_dict, f, ensure_ascii=False, indent=4)
-    
-    return {"success": True}

@@ -302,8 +302,8 @@ defineExpose({
 
 <style scoped>
 :root {
-  --primary-color: #6A0DAD;
-  --primary-light: rgba(106, 13, 173, 0.1);
+  --primary-color: #FF0073;
+  --primary-light: rgba(255, 0, 115, 0.1);
   --transition-speed: 0.3s;
 }
 
@@ -399,7 +399,7 @@ defineExpose({
 .btn-download:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(106, 13, 173, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 0, 115, 0.4);
 }
 
 /* 导航按钮 */

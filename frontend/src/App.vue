@@ -46,8 +46,8 @@ provide('Alert', {
 
 <style>
 :root {
-  --primary-color: #6A0DAD;
-  --primary-light: rgba(106, 13, 173, 0.1);
+  --primary-color: #FF0073;
+  --primary-light: rgba(255, 0, 115, 0.1);
 }
 
 * {
@@ -87,11 +87,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(106, 13, 173, 0.3);
+  background: rgba(255, 0, 115, 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(106, 13, 173, 0.5);
+  background: rgba(255, 0, 115, 0.5);
 }
 </style>

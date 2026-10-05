@@ -1,5 +1,5 @@
 .celebration-hero {
-    background: linear-gradient(45deg, #9B59B6, #9B59B6, #8A2BE2, #9370DB, #6A0DAD);
+    background: linear-gradient(45deg, #FF0073, #FF0073, #FF4D9E, #9370DB, #FF0073);
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
     padding: 8rem 2rem;

@@ -219,7 +219,7 @@ const toggleFollow = () => {
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
 }
 
 .stat-label {
@@ -242,7 +242,7 @@ const toggleFollow = () => {
 }
 
 .contact-item i {
-  color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
   font-size: 1rem;
 }
 
@@ -270,12 +270,12 @@ const toggleFollow = () => {
 }
 
 .btn-follow {
-  background: var(--primary-color, #6A0DAD);
+  background: var(--primary-color, #FF0073);
   color: white;
 }
 
 .btn-follow:hover {
-  background: var(--primary-dark, #5a0b91);
+  background: var(--primary-dark, #CC005C);
   transform: translateY(-1px);
 }
 
@@ -299,8 +299,8 @@ const toggleFollow = () => {
 
 .btn-profile:hover {
   background: var(--primary-light);
-  color: var(--primary-color, #6A0DAD);
-  border-color: var(--primary-color, #6A0DAD);
+  color: var(--primary-color, #FF0073);
+  border-color: var(--primary-color, #FF0073);
 }
 
 /* 响应式 */

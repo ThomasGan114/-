@@ -22,11 +22,6 @@
                 </router-link>
               </li>
               <li class="nav-item mb-2">
-                <router-link to="/admin/report" class="nav-link text-white">
-                  <i class="bi bi-flag me-2"></i>举报管理
-                </router-link>
-              </li>
-              <li class="nav-item mb-2">
                 <router-link to="/admin/log" class="nav-link text-white">
                   <i class="bi bi-file-text me-2"></i>日志查看
                 </router-link>
@@ -192,7 +187,7 @@ onMounted(() => {
 }
 
 .nav-link.active {
-  background-color: #6A0DAD;
+  background-color: #FF0073;
 }
 
 .admin-content {
@@ -206,6 +201,6 @@ onMounted(() => {
   border: none;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border-left: 4px solid #6A0DAD;
+  border-left: 4px solid #FF0073;
 }
 </style>

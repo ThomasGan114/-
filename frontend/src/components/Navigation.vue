@@ -3,7 +3,7 @@
     <div class="container">
       <a class="navbar-brand" href="/">
         <i class="bi bi-house-door me-2"></i>
-        龙高校园墙
+        深高园校园墙
       </a>
       <button
         class="navbar-toggler"
@@ -26,16 +26,6 @@
           <li class="nav-item">
             <router-link class="nav-link" :class="{ active: $route.path === '/wall' }" to="/wall">
               <i class="bi bi-chat-quote me-1"></i>校园墙
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link" :class="{ active: $route.path.startsWith('/help') }" to="/help">
-              <i class="bi bi-question-circle me-1"></i>帮助
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link class="nav-link" :class="{ active: $route.path === '/apps' }" to="/apps">
-              <i class="bi bi-grid me-1"></i>应用广场
             </router-link>
           </li>
         </ul>

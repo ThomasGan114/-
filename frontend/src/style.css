@@ -1,13 +1,13 @@
 :root {
-  --primary-light: rgba(106, 13, 173, 0.1);
+  --primary-light: rgba(255, 0, 115, 0.1);
   --sidebar-width: 250px;
   --navbar-height: 64px;
   --content-max-width: 1200px;
 }
 
 [data-theme="light"] {
-  --primary-dark: #6A0DAD;
-  --primary-color: #9b59b6;
+  --primary-dark: #CC005C;
+  --primary-color: #FF0073;
 
 
   --bg-color: #e0e0e0d2;
@@ -19,12 +19,12 @@
   --sidebar-bg: #ffffff;
   --navbar-bg: #ffffff;
   --input-bg: #ffffff;
-  --hover-bg: rgba(106, 13, 173, 0.05);
+  --hover-bg: rgba(255, 0, 115, 0.05);
 }
 
 [data-theme="dark"] {
-  --secondary-color: #8a2be2;
-  --primary-dark: #5a0b91;
+  --secondary-color: #FF4D9E;
+  --primary-dark: #CC005C;
 
   --bg-color: #1a1a1a;
   --card-bg: #2d2d2d;
@@ -35,7 +35,7 @@
   --sidebar-bg: #2d2d2d;
   --navbar-bg: #2d2d2d;
   --input-bg: #3d3d3d;
-  --hover-bg: rgba(106, 13, 173, 0.15);
+  --hover-bg: rgba(255, 0, 115, 0.15);
 }
 
 * {
@@ -107,12 +107,12 @@ textarea::-webkit-input-placeholder { /* Chrome/Opera/Safari */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(106, 13, 173, 0.3);
+  background: rgba(255, 0, 115, 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(106, 13, 173, 0.5);
+  background: rgba(255, 0, 115, 0.5);
 }
 
 /* Bootstrap 覆盖样式 */

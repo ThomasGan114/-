@@ -10,7 +10,7 @@ from functools import lru_cache
 class Settings(BaseSettings):
     """应用配置"""
     # 基础配置
-    APP_NAME: str = "龙高校园墙 API"
+    APP_NAME: str = "深高园校园墙 API"
     DEBUG: bool = False
     SECRET_KEY: str = "your-secret-key-change-in-production"
     

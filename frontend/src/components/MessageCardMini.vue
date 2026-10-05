@@ -29,6 +29,7 @@
                 :alt="file"
                 class="file-image"
                 loading="lazy"
+                @error="onFileImageError($event, file)"
               >
             </div>
             <!-- 视频缩略图 -->
@@ -179,6 +180,18 @@ const getFileTinyUrl = (file) => {
   return staticUrl + 'tiny_files/' + file
 }
 
+const getFileUploadUrl = (file) => {
+  return staticUrl + 'uploads/' + file
+}
+
+// 缩略图不存在时回退到原图，避免整张图裂开
+const onFileImageError = (event, file) => {
+  const img = event.target
+  if (!img || img.dataset.fallback) return
+  img.dataset.fallback = '1'
+  img.src = getFileUploadUrl(file)
+}
+
 const isImage = (file) => {
   const ext = file.split('.').pop().toLowerCase()
   return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)
@@ -320,9 +333,9 @@ nextTick(() => {
 
 <style scoped>
 :root {
-  --primary-color: #6A0DAD;
-  --primary-light: rgba(106, 13, 173, 0.1);
-  --primary-dark: #5a0b91;
+  --primary-color: #FF0073;
+  --primary-light: rgba(255, 0, 115, 0.1);
+  --primary-dark: #CC005C;
 }
 
 .message-card {
@@ -380,7 +393,7 @@ nextTick(() => {
 }
 
 .action-menu-btn:hover {
-  background: var(--hover-bg, rgba(106, 13, 173, 0.05));
+  background: var(--hover-bg, rgba(255, 0, 115, 0.05));
   color: var(--primary-color);
 }
 
@@ -413,7 +426,7 @@ nextTick(() => {
 }
 
 .menu-item:hover {
-  background: var(--hover-bg, rgba(106, 13, 173, 0.05));
+  background: var(--hover-bg, rgba(255, 0, 115, 0.05));
 }
 
 .card-body {
@@ -498,7 +511,7 @@ nextTick(() => {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(106, 13, 173, 0.1) 0%, rgba(106, 13, 173, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 0, 115, 0.1) 0%, rgba(255, 0, 115, 0.05) 100%);
   opacity: 0;
   transition: opacity 0.3s;
 }

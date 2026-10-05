@@ -94,7 +94,7 @@ const handleLogin = async () => {
 
 <style scoped>
 .admin-login-page {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #FF4D9E 0%, #CC005C 100%);
   min-height: 100vh;
 }
 
@@ -110,13 +110,13 @@ const handleLogin = async () => {
 }
 
 .btn-primary {
-  background-color: #6A0DAD;
-  border-color: #6A0DAD;
+  background-color: #FF0073;
+  border-color: #FF0073;
   padding: 12px;
 }
 
 .btn-primary:hover {
-  background-color: #5a0b91;
-  border-color: #5a0b91;
+  background-color: #CC005C;
+  border-color: #CC005C;
 }
 </style>

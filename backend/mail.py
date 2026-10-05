@@ -77,8 +77,8 @@ if __name__ == "__main__":
     sender = MailSender()
     sender.send_mail(
         "test@example.com",
-        "龙高校园墙 - 邮箱验证码",
+        "深高园校园墙 - 邮箱验证码",
         os.path.join("templates", "email_verification_code.html"),
-        from_email="龙华高级中学校园墙",
+        from_email="深圳市高级中学高中园校园墙",
         verificationcode=str(random.randint(100000, 999999)),
     )
