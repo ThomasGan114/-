@@ -14,3 +14,32 @@
 [build.environment]
   # Vite 7 要求 Node ^20.19 或 >=22.12，固定 22 防止 Netlify 默认版本过低导致构建失败
   NODE_VERSION = "22"
+
+# ---------------------------------------------------------------------------
+# 反向代理
+#
+# 线上后端 api-eo.long-gao.com 的 CORS 白名单里没有 *.netlify.app，
+# 浏览器发预检 OPTIONS 会被它以 400 拒绝 —— 于是页面报「网络连接失败」。
+# 这里把接口和静态资源请求转发到后端，浏览器看到的是「同源请求」，
+# 根本不触发 CORS，也就无需改动后端或域名。
+#
+# 规则顺序很重要：具体路径在前，SPA 回退放最后。
+# ---------------------------------------------------------------------------
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://api-eo.long-gao.com/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/static/*"
+  to = "https://api-eo.long-gao.com/static/:splat"
+  status = 200
+
+# SPA 回退：站内不存在的路径交给前端路由（vue-router history 模式），
+# 让 /vote、/wall/message/1 这类地址直接访问或刷新时不会 404。
+# 不加 force，保证 /assets/ 等真实文件仍然优先命中。
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
