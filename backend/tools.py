@@ -71,19 +71,56 @@ def get_file_name(file: str) -> str:
 
 
 def change_image_file_extension(path: str, file: str) -> str:
-    """将图片转换为PNG格式"""
+    """将图片转换为 PNG 格式，返回**新的文件名**（不含目录）
+
+    注意（历史 bug）：早期实现 return 的是 os.path.join(path, 新文件名)，即带目录的路径。
+    调用方（app.py 的 /api/direct_upload 与 /api/merge_chunks）会把它当作裸文件名返回给前端，
+    前端再拿它去 /api/wall/submit 提交，而后端校验的是
+    os.path.exists(os.path.join(UPLOAD_FOLDER, filename)) —— 于是拼成
+    static/uploads/static/uploads/xxx.png，必然不存在，文件被静默丢弃。
+    表现：手机拍的照片（jpg/jpeg）发出去后留言里没有图片，而 png 截图一切正常
+    （因为 png 不会走这个转换分支）。这里与 change_file_extension 保持一致，返回裸文件名。
+
+    转换失败时返回原文件名，避免返回一个并不存在的 .png 路径。
+    """
     root, _ = os.path.splitext(file)
-    new_file = os.path.join(path, f"{root}.png")
-    convert_to_png(os.path.join(path, file), new_file)
-    return new_file
+    new_name = f"{root}.png"
+    src = os.path.join(path, file)
+    dst = os.path.join(path, new_name)
+    try:
+        convert_to_png(src, dst)
+    except Exception as e:  # 转换器本身一般不抛异常，但仍兜住，宁可保留原文件
+        print(f"图片转 PNG 异常，保留原文件 {file}: {e}")
+        return file
+    if not os.path.isfile(dst) or os.path.getsize(dst) == 0:
+        print(f"图片转 PNG 失败，保留原文件 {file}")
+        return file
+    try:
+        os.remove(src)  # 转换成功后删掉原图，避免 static/uploads 里堆积孤儿文件
+    except OSError:
+        pass
+    return new_name
 
 
 def change_video_file_extension(path: str, file: str) -> str:
-    """将视频转换为MP4格式"""
+    """将视频转换为 MP4 格式，返回**新的文件名**（不含目录，理由同 change_image_file_extension）"""
     root, _ = os.path.splitext(file)
-    new_file = os.path.join(path, f"{root}.mp4")
-    convert_to_mp4(os.path.join(path, file), new_file)
-    return new_file
+    new_name = f"{root}.mp4"
+    src = os.path.join(path, file)
+    dst = os.path.join(path, new_name)
+    try:
+        convert_to_mp4(src, dst)
+    except Exception as e:  # 例如服务器没装 ffmpeg（FileNotFoundError）
+        print(f"视频转 MP4 异常，保留原文件 {file}: {e}")
+        return file
+    if not os.path.isfile(dst) or os.path.getsize(dst) == 0:
+        print(f"视频转 MP4 失败，保留原文件 {file}")
+        return file
+    try:
+        os.remove(src)
+    except OSError:
+        pass
+    return new_name
 
 
 def change_file_extension(path: str, file: str, new_extension: str) -> str:
