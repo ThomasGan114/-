@@ -1,94 +1,86 @@
-# 深高园校园墙 FastAPI 后端
+# 深高园校园墙 · FastAPI 后端
 
-这是深高园校园墙的 FastAPI 版本后端，从 Flask 版本迁移而来。
-
-## 功能特性
-
-- 消息墙功能（发帖、评论、点赞、踩）
-- 文件上传（支持分片上传和直接上传）
-- 管理员后台
-- 用户系统基础框架
-- 公告系统
-- 举报系统
+配套前端见仓库根目录的 [`frontend/`](../frontend/)（Vue 3 + Vite）。后端只提供 HTTP 接口，与前端源码完全解耦。
 
 ## 技术栈
 
-- FastAPI 0.104+
-- Uvicorn
-- SQLite (消息存储)
-- Pillow (图片处理)
-- FFmpeg (视频处理)
+- FastAPI + Uvicorn
+- SQLite（留言存储，`static/messages/messages.db`）
+- Pillow（图片处理、缩略图）
+- FFmpeg（可选，视频转码与缩略图）
 
-## 安装
+## 功能
+
+- 留言：发布、评论、点赞 / 点踩、分区与标签、搜索与热门
+- 文件上传：分片上传、合并、直传；图片转 PNG 并生成缩略图到 `static/tiny_files/`
+- 公告：读取 / 发布
+- 管理员后台：登录校验、留言审核与删除、评论删除、公告管理、操作日志、错误日志
+- 邮件发送能力（`mail.py`，当前未接任何路由）
+
+## 安装与运行
 
 ```bash
-# 创建虚拟环境
-python -m venv venv
-
-# 激活虚拟环境
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# 安装依赖
+cd backend
+python -m venv .venv
+# Windows: .venv\Scripts\activate      Linux/Mac: source .venv/bin/activate
 pip install -r requirements.txt
+
+cp .env.example .env        # 按需修改
+python app.py               # 默认 0.0.0.0:5412
+# 或： uvicorn app:app --host 0.0.0.0 --port 5412 --reload
 ```
 
-## 配置
+启动后 `GET /health` 返回 `{"status":"ok"}`，接口文档在 `/docs`。
 
-1. 复制 `.env.example` 为 `.env`
-2. 配置必要的环境变量
+## 配置（`.env`）
 
-## 运行
+| 变量 | 默认 | 说明 |
+| --- | --- | --- |
+| `DEBUG` | `False` | 为 `True` 时 `app.py` 会以 reload 模式启动 |
+| `SECRET_KEY` | 占位值 | 会话密钥，生产环境必须更换 |
+| `HOST` / `PORT` | `0.0.0.0` / `5412` | 监听地址与端口 |
+| `SMTP_SERVER` / `SMTP_PORT` | `smtp.126.com` / `465` | 发件服务器 |
+| `SENDER_EMAIL` | — | 发件邮箱 |
+| `EMAIL_SENDER_PASSWORD` | — | **邮箱客户端授权码**（不是登录密码） |
+| `DB_HOST` / `DB_PASSWORD` | 空 | MongoDB，可选 |
 
-```bash
-# 直接运行
-python app.py
+CORS 白名单在 [`config.py`](config.py) 的 `ALLOWED_ORIGINS`：前端部署到新域名时，要么把域名加进去，要么用反向代理让请求变成同源。
 
-# 或使用 uvicorn
-uvicorn app:app --host 0.0.0.0 --port 5412 --reload
+## 目录说明
 
-# Windows 下可使用启动脚本
-start.bat
+```
+backend/
+├── app.py            # 入口：lifespan、/health、上传相关路由、静态目录挂载
+├── config.py         # 配置（pydantic-settings，读取 .env）
+├── deps.py           # 全局依赖（消息管理器、公告加载器）
+├── msg.py            # 留言管理器（SQLite 读写）
+├── tools.py          # 文件校验、图片/视频转换、缩略图、JSON 加载
+├── mail.py           # 邮件发送封装
+├── database.py       # MongoDB 连接（可选，当前未启用）
+├── routes/
+│   ├── api.py        # 前缀 /api        列表、详情、公告、标签、分区、热门
+│   ├── messages.py   # 前缀 /api/wall   提交、评论、点赞、点踩
+│   ├── users.py      # 前缀 /user       登录、头像、资料更新
+│   └── admin.py      # 前缀 /api/admin  登录、审核、删除、公告、日志
+├── static/           # 运行时数据（见下）
+└── logs/info.log     # 运行日志
 ```
 
-## API 端点
+## 运行时数据（不入库）
 
-### 消息相关
-- `GET /api/get_messages` - 获取消息列表
-- `POST /api/get_message_details/{message_id}` - 获取消息详情
-- `POST /api/wall/submit` - 提交新消息
-- `POST /api/wall/like/{message_id}` - 点赞
-- `POST /api/wall/dislike/{message_id}` - 踩
-- `POST /api/wall/comment/{message_id}` - 评论
+| 路径 | 内容 |
+| --- | --- |
+| `static/messages/messages.db` | 留言库 |
+| `static/uploads/` | 上传的原文件 |
+| `static/tiny_files/` | 缩略图（列表页加载这个目录） |
+| `static/notice.json` | 当前公告 |
+| `admin_log.json`、`manage_message.json` | 操作日志、待审核记录 |
+| `logs/info.log` | 运行日志 |
 
-### 文件上传
-- `POST /api/chunked_upload` - 分片上传
-- `POST /api/merge_chunks` - 合并分片
-- `POST /api/direct_upload` - 直接上传
-
-### 管理员
-- `GET /admin` - 管理员主页
-- `GET /admin/login` - 登录页面
-- `POST /admin/login` - 登录处理
-- `POST /admin/delete_message/{school}/{message_id}` - 删除消息
-
-### 其他
-- `GET /health` - 健康检查
-- `POST /api/notice` - 获取公告
-- `POST /api/get_tags` - 获取标签
+这些路径已通过 `.git/info/exclude` 忽略，**不会随仓库分发**：部署到新环境时请单独准备或挂载。
 
 ## 与 Flask 版本的差异
 
-1. 使用 FastAPI 替代 Flask
-2. 使用 Pydantic 进行数据验证
-3. 使用异步处理提高性能
-4. 使用 lifespan 管理应用生命周期
-5. 路由组织更加模块化
-
-## 注意事项
-
-- 默认端口为 5412（Flask 版本为 5411）
-- 需要安装 FFmpeg 用于视频处理
-- 静态文件目录为 `static/`
+1. FastAPI 替代 Flask，Pydantic 做数据校验
+2. `lifespan` 管理启动/关闭，路由按模块拆分（`routes/`）
+3. 默认端口 5412（Flask 版为 5411）
