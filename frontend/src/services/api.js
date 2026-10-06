@@ -1,7 +1,17 @@
 import axios from 'axios'
 
-// 开发环境通过代理，baseURL 为空字符串；生产环境使用环境变量或默认值
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://api-eo.long-gao.com/' : '')
+// API 基址：
+//   1) 只要 .env 里**显式**写了 VITE_API_BASE_URL（哪怕值是空串），就用它。
+//      空串表示「同源」——请求打到当前域名，由部署层（Netlify / nginx）反向代理到后端，
+//      浏览器看到的是同源请求，天然没有跨域问题（这也是 Netlify 上线的期望行为）。
+//   2) 完全没配置时（undefined），生产构建才回退到旧的线上后端，保持对既有部署的兼容。
+//
+// 注意：不能用 `import.meta.env.VITE_API_BASE_URL || 兜底`——那样空串会被当成「没配」，
+// 生产包就会硬编码 api-eo.long-gao.com，导致浏览器绕过反向代理、直接跨域被拒。
+const ENV_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = (ENV_BASE_URL === undefined || ENV_BASE_URL === null)
+  ? (process.env.NODE_ENV === 'production' ? 'https://api-eo.long-gao.com/' : '')
+  : ENV_BASE_URL
 
 const api = axios.create({
   baseURL: API_BASE_URL,
