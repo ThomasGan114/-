@@ -1,0 +1,6 @@
+# 反向代理：接口与静态资源转发到自建后端（浏览器只发同源请求，不触发 CORS）
+/api/*      http://193.112.17.150:5412/api/:splat      200
+/static/*   http://193.112.17.150:5412/static/:splat   200
+
+# SPA 回退：站内不存在的路径交给前端路由（vue-router history 模式），必须放在最后
+/*          /index.html                                 200
