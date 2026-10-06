@@ -14,7 +14,13 @@
 
       <div v-if="message.files && message.files.length > 0" class="message-files">
         <div class="files-grid">
-          <div v-for="(file, index) in message.files" :key="index" class="file-item" @click="openFilePreview(index, message.files)">
+          <div
+            v-for="(file, index) in message.files"
+            :key="index"
+            class="file-item"
+            :class="{ 'file-audio-item': isAudio(file) }"
+            @click="openFilePreview(index, message.files)"
+          >
             <!-- 图片缩略图 -->
             <div v-if="isImage(file)" class="file-link file-image-wrapper">
               <img
@@ -51,6 +57,23 @@
               <div class="file-thumbnail archive">
                 <i class="bi bi-file-earmark-zip-fill"></i>
                 <span class="file-type-label">{{ getFileTypeLabel(file) }}</span>
+              </div>
+            </div>
+            <!-- 音频：内嵌播放器，点一下直接就能听（@click.stop 避免误开预览弹窗） -->
+            <div v-else-if="isAudio(file)" class="file-link file-audio-wrapper" @click.stop>
+              <div class="audio-card">
+                <div class="audio-icon">
+                  <i class="bi bi-music-note-beamed"></i>
+                </div>
+                <div class="audio-main">
+                  <div class="audio-name">{{ getFileName(file) }}</div>
+                  <audio
+                    :src="getFileUploadUrl(file)"
+                    controls
+                    preload="metadata"
+                    class="audio-el"
+                  ></audio>
+                </div>
               </div>
             </div>
             <!-- 其他文件 -->
@@ -318,6 +341,11 @@ const isImage = (file) => {
 const isVideo = (file) => {
   const ext = file.split('.').pop().toLowerCase()
   return ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv'].includes(ext)
+}
+
+const isAudio = (file) => {
+  const ext = file.split('.').pop().toLowerCase()
+  return ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'oga', 'opus', 'wma', 'amr'].includes(ext)
 }
 
 const isPdf = (file) => {
@@ -743,6 +771,60 @@ nextTick(() => {
 
 .file-thumbnail.other i {
   font-size: 2.5rem;
+}
+
+/* ==================== 音频播放器（占满整行） ==================== */
+.file-audio-item {
+  grid-column: 1 / -1;
+  cursor: default;
+}
+
+.file-audio-wrapper {
+  width: 100%;
+}
+
+.audio-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--primary-light, rgba(255, 0, 115, 0.08));
+  border: 1px solid rgba(255, 0, 115, 0.18);
+}
+
+.audio-icon {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.audio-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.audio-name {
+  font-size: 0.85rem;
+  color: var(--text-color, #333);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.audio-el {
+  width: 100%;
+  height: 34px;
+  display: block;
 }
 
 .message-tags {

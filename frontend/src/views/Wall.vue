@@ -151,6 +151,29 @@
                   @change="handleFileSelect"
                   ref="fileInput"
                 >
+                <button
+                  type="button"
+                  class="record-btn"
+                  :class="{ 'is-recording': isRecording, 'is-busy': recordBusy && !isRecording }"
+                  :disabled="uploading || (recordBusy && !isRecording)"
+                  @pointerdown.prevent="startRecord"
+                  @contextmenu.prevent
+                  @dragstart.prevent
+                >
+                  <i :class="isRecording ? 'bi bi-stop-circle-fill' : 'bi bi-mic-fill'"></i>
+                  <span v-if="isRecording">录音中 {{ recordSeconds.toFixed(1) }}s</span>
+                  <span v-else-if="recordBusy">生成 MP3 中…</span>
+                  <span v-else>长按录音</span>
+                </button>
+                <div v-if="isRecording" class="record-meter">
+                  <div class="record-meter-bar" :style="{ width: recordPercent + '%' }"></div>
+                </div>
+                <p v-if="isRecording" class="record-tip recording">
+                  松开结束 · 最长 {{ MAX_DURATION }} 秒（{{ recordSeconds.toFixed(1) }} / {{ MAX_DURATION }}）
+                </p>
+                <p v-else class="record-tip">
+                  按住说话，松开自动生成 MP3（{{ MIN_DURATION }}–{{ MAX_DURATION }} 秒）
+                </p>
                 <div v-if="uploadFiles.length > 0" class="file-list">
                   <div v-for="(file, index) in uploadFiles" :key="index" class="file-item">
                     <i class="bi bi-file-earmark"></i>
@@ -183,11 +206,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch, inject } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '../services/api'
 import MessageCard from '../components/MessageCard.vue'
 import Modal from '../components/Modal.vue'
+import {
+  MIN_DURATION,
+  MAX_DURATION,
+  isRecordingSupported,
+  startRecording,
+  encodeToMp3,
+  buildRecordingFile
+} from '../utils/audioRecorder'
 
 const Alert = inject('Alert')
 
@@ -500,6 +531,125 @@ const uploadAllFiles = async () => {
   }
 }
 
+// ==================== 一键录音（长按录制，松开结束，自动生成 mp3） ====================
+const isRecording = ref(false)
+const recordSeconds = ref(0)
+const recordBusy = ref(false) // 正在申请麦克风 / 正在编码 mp3
+let recorderHandle = null
+let recordTicker = null
+let recordAutoStop = null
+
+const recordPercent = computed(() =>
+  Math.min(100, (recordSeconds.value / MAX_DURATION) * 100)
+)
+
+const detachRecordListeners = () => {
+  window.removeEventListener('pointerup', handleGlobalPointerUp, true)
+  window.removeEventListener('pointercancel', handleGlobalPointerUp, true)
+  window.removeEventListener('blur', handleGlobalPointerUp, true)
+}
+
+const clearRecordTimers = () => {
+  if (recordTicker) {
+    clearInterval(recordTicker)
+    recordTicker = null
+  }
+  if (recordAutoStop) {
+    clearTimeout(recordAutoStop)
+    recordAutoStop = null
+  }
+}
+
+function handleGlobalPointerUp () {
+  // 手指/鼠标在哪里松开都能结束录音，不必停在按钮上
+  if (isRecording.value) finishRecording(false)
+}
+
+// 长按开始
+const startRecord = async () => {
+  if (isRecording.value || recordBusy.value || uploading.value) return
+  if (!isRecordingSupported()) {
+    Alert.showTopRightAlert('当前浏览器不支持录音，请用最新版 Chrome / Edge / Safari', 'warning', '提示')
+    return
+  }
+
+  recordBusy.value = true
+  try {
+    recorderHandle = await startRecording()
+  } catch (error) {
+    recorderHandle = null
+    recordBusy.value = false
+    const denied = error && (error.name === 'NotAllowedError' || error.name === 'SecurityError')
+    Alert.showTopRightAlert(
+      denied ? '麦克风权限被拒绝，请在浏览器里允许麦克风后重试' : `无法开始录音：${(error && error.message) || '未知错误'}`,
+      'error',
+      '录音失败'
+    )
+    return
+  }
+
+  recordBusy.value = false
+  isRecording.value = true
+  recordSeconds.value = 0
+  recordTicker = setInterval(() => {
+    recordSeconds.value = recorderHandle ? recorderHandle.elapsed : 0
+  }, 100)
+  // 到最长时长自动停止（仍然把录到的内容保留下来）
+  recordAutoStop = setTimeout(() => finishRecording(true), MAX_DURATION * 1000)
+
+  window.addEventListener('pointerup', handleGlobalPointerUp, true)
+  window.addEventListener('pointercancel', handleGlobalPointerUp, true)
+  window.addEventListener('blur', handleGlobalPointerUp, true)
+}
+
+// 松开结束
+const finishRecording = async (autoStopped) => {
+  if (!isRecording.value || !recorderHandle) return
+
+  isRecording.value = false
+  clearRecordTimers()
+  detachRecordListeners()
+
+  const handle = recorderHandle
+  recorderHandle = null
+  recordBusy.value = true
+  try {
+    const { blob, duration } = await handle.stop()
+    if (duration < MIN_DURATION) {
+      Alert.showTopRightAlert(`录音太短（${duration.toFixed(1)} 秒），至少需要 ${MIN_DURATION} 秒`, 'warning', '提示')
+      return
+    }
+    const mp3 = await encodeToMp3(blob)
+    uploadFiles.value = [...uploadFiles.value, buildRecordingFile(mp3)]
+    Alert.showTopRightAlert(
+      autoStopped
+        ? `已录满 ${MAX_DURATION} 秒并自动停止，录音已加入文件列表`
+        : `录音已加入文件列表（${duration.toFixed(1)} 秒）`,
+      'success',
+      '录音完成'
+    )
+  } catch (error) {
+    console.error('录音处理失败:', error)
+    Alert.showTopRightAlert(`录音处理失败：${(error && error.message) || '未知错误'}`, 'error', '录音失败')
+  } finally {
+    recordBusy.value = false
+    recordSeconds.value = 0
+  }
+}
+
+// 放弃录音（关窗/卸载时调用，直接释放麦克风）
+const cancelRecording = () => {
+  clearRecordTimers()
+  detachRecordListeners()
+  if (recorderHandle) {
+    recorderHandle.cancel()
+    recorderHandle = null
+  }
+  isRecording.value = false
+  recordBusy.value = false
+  recordSeconds.value = 0
+}
+
 // 处理发布留言
 const handlePublish = async () => {
   if (publishing.value) return
@@ -591,6 +741,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', saveScrollPosition)
   window.removeEventListener('open-publish-modal', handleOpenPublishModal)
+  cancelRecording()
 })
 </script>
 
@@ -1052,6 +1203,83 @@ onUnmounted(() => {
 
 .publish-files input {
   display: none;
+}
+
+/* ==================== 一键录音 ==================== */
+.record-btn {
+  width: 100%;
+  height: 40px;
+  margin-top: 8px;
+  padding: 8px;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--primary-light, rgba(255, 0, 115, 0.1));
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none; /* 长按时不要触发页面滚动/长按菜单 */
+  transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.record-btn i {
+  font-size: 1.15rem;
+}
+
+.record-btn:hover:not(:disabled) {
+  background-color: rgba(255, 0, 115, 0.18);
+}
+
+.record-btn.is-recording {
+  background-color: #e53935;
+  color: #fff;
+  transform: scale(0.99);
+  animation: record-pulse 1.1s ease-in-out infinite;
+}
+
+.record-btn.is-busy,
+.record-btn:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+@keyframes record-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.15); }
+  50% { box-shadow: 0 0 0 9px rgba(229, 57, 53, 0.05); }
+}
+
+.record-meter {
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.record-meter-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary-color), #e53935);
+  transition: width 0.1s linear;
+}
+
+.record-tip {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #888);
+  text-align: center;
+}
+
+.record-tip.recording {
+  color: #e53935;
+  font-weight: 600;
 }
 
 

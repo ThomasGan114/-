@@ -39,6 +39,18 @@
         ref="videoRef"
       ></video>
 
+      <!-- 音频 -->
+      <div v-else-if="currentFileType === 'audio'" class="modal-audio-wrapper">
+        <i class="bi bi-music-note-beamed modal-audio-icon"></i>
+        <audio
+          :src="currentFileUrl"
+          class="modal-audio"
+          controls
+          autoplay
+          ref="audioRef"
+        ></audio>
+      </div>
+
       <!-- PDF - 使用原生PDF查看器 -->
       <iframe
         v-else-if="currentFileType === 'pdf'"
@@ -111,6 +123,7 @@ const emit = defineEmits(['close'])
 const visible = ref(false)
 const currentIndex = ref(0)
 const videoRef = ref(null)
+const audioRef = ref(null)
 
 const staticUrl = import.meta.env.VITE_STATIC_URL || '/static/'
 
@@ -140,6 +153,9 @@ const open = () => {
 const close = () => {
   if (videoRef.value) {
     videoRef.value.pause()
+  }
+  if (audioRef.value) {
+    audioRef.value.pause()
   }
   visible.value = false
 
@@ -175,6 +191,9 @@ const pauseCurrentVideo = () => {
   if (videoRef.value) {
     videoRef.value.pause()
   }
+  if (audioRef.value) {
+    audioRef.value.pause()
+  }
 }
 
 // 下载文件
@@ -195,6 +214,8 @@ const getFileType = (file) => {
     return 'image'
   } else if (['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv'].includes(ext)) {
     return 'video'
+  } else if (['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg', 'oga', 'opus', 'wma', 'amr'].includes(ext)) {
+    return 'audio'
   } else if (ext === 'pdf') {
     return 'pdf'
   } else if (isOfficeFile({ ext })) {
@@ -337,6 +358,29 @@ defineExpose({
   width: auto;
   height: auto;
   outline: none;
+  display: block;
+}
+
+/* 音频 */
+.modal-audio-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  padding: 48px 32px;
+  color: #fff;
+}
+
+.modal-audio-icon {
+  font-size: 4.5rem;
+  opacity: 0.9;
+}
+
+.modal-audio {
+  width: min(520px, 100%);
+  height: 44px;
   display: block;
 }
 
