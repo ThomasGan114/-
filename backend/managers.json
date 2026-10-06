@@ -1,7 +1,8 @@
 {
     "admin": {
         "username": "admin",
-        "password": "asdfafew4vgdf",
+        "password": "",
+        "_note": "管理员密码已改为从 .env 的 ADMIN_PASSWORD 读取（该文件不入库）。此处留空，空密码一律拒绝登录。",
         "permissions": [
             {"name": "view_log", "description": "查看日志", "url": "/admin/log"},
             {"name": "notice", "description": "发布公告", "url": "/admin/notice"},

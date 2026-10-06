@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     APP_NAME: str = "深高园校园墙 API"
     DEBUG: bool = False
     SECRET_KEY: str = "your-secret-key-change-in-production"
+
+    # 管理员账号（务必在 .env 里设置 ADMIN_PASSWORD，不要写进仓库；
+    # 未设置时会回退到 managers.json，但该文件可能被提交，存在泄露风险）
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = ""
     
     # 服务器配置
     HOST: str = "0.0.0.0"

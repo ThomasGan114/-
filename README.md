@@ -101,6 +101,7 @@ Vite 已把 `/api`、`/static`、`/health` 代理到 `http://localhost:5412`（�
 | --- | --- |
 | `DEBUG` | 是否热重载，默认 `False` |
 | `SECRET_KEY` | 会话密钥，生产环境务必更换 |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | 后台登录账号，**密码只放在 `.env` 里**（`managers.json` 已不再存密码） |
 | `HOST` / `PORT` | 监听地址与端口，默认 `0.0.0.0:5412` |
 | `SMTP_SERVER` / `SMTP_PORT` / `SENDER_EMAIL` / `EMAIL_SENDER_PASSWORD` | 邮件发送（当前配置为 126 邮箱 `smtp.126.com:465`，密码需填**客户端授权码**而非登录密码） |
 | `DB_HOST` / `DB_PASSWORD` | MongoDB，可选 |

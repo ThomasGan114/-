@@ -38,6 +38,8 @@ python app.py               # 默认 0.0.0.0:5412
 | --- | --- | --- |
 | `DEBUG` | `False` | 为 `True` 时 `app.py` 会以 reload 模式启动 |
 | `SECRET_KEY` | 占位值 | 会话密钥，生产环境必须更换 |
+| `ADMIN_USERNAME` | `admin` | 后台登录用户名 |
+| `ADMIN_PASSWORD` | 空 | **后台登录密码**；留空则后台无法登录。放在 `.env` 里，不要写进仓库 |
 | `HOST` / `PORT` | `0.0.0.0` / `5412` | 监听地址与端口 |
 | `SMTP_SERVER` / `SMTP_PORT` | `smtp.126.com` / `465` | 发件服务器 |
 | `SENDER_EMAIL` | — | 发件邮箱 |

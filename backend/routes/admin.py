@@ -5,6 +5,7 @@ import os
 import json
 import uuid
 import re
+import hmac
 import shutil
 from datetime import datetime
 from typing import Optional, List
@@ -25,15 +26,41 @@ from concurrent.futures import ThreadPoolExecutor
 executor = ThreadPoolExecutor(max_workers=70)
 
 
+def _safe_equal(a: str, b: str) -> bool:
+    """定长时间比较，避免时序侧信道；用 bytes 兼容非 ASCII 密码"""
+    return hmac.compare_digest(str(a).encode('utf-8'), str(b).encode('utf-8'))
+
+
 def verify_admin(admin_name: str, admin_password: str) -> bool:
-    """验证管理员账号密码"""
+    """验证管理员账号密码
+
+    密码优先取 .env 里的 ADMIN_PASSWORD（.env 不入库）；
+    没有配置时才回退到 managers.json 的旧行为，并在日志里提示风险。
+    空密码一律拒绝，避免 managers.json 里留空后被空密码登录。
+    """
+    if not admin_name or not admin_password:
+        return False
+
+    env_user = (settings.ADMIN_USERNAME or 'admin').strip()
+    env_password = (settings.ADMIN_PASSWORD or '').strip()
+    if env_password:
+        return _safe_equal(admin_name, env_user) and _safe_equal(admin_password, env_password)
+
+    # ---- 兼容旧配置：managers.json ----
     if not os.path.exists('managers.json'):
         return False
-    with open('managers.json', 'r', encoding='utf-8') as f:
-        managers_data = json.load(f)
-    if admin_name in managers_data:
-        if admin_password == managers_data[admin_name]['password']:
-            return True
+    try:
+        with open('managers.json', 'r', encoding='utf-8') as f:
+            managers_data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    legacy_password = (managers_data.get(admin_name) or {}).get('password') or ''
+    if not legacy_password:
+        return False
+    if _safe_equal(admin_password, legacy_password):
+        print('[警告] 管理员密码来自 managers.json —— 建议在 backend/.env 里设置 ADMIN_PASSWORD')
+        return True
     return False
 
 
