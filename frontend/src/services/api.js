@@ -194,6 +194,9 @@ export default {
   adminGetWall() {
     return api.get('/api/admin/wall')
   },
+  adminGetStats() {
+    return api.get('/api/admin/api/stats')
+  },
 
   // 公告管理
   adminGetNotice() {

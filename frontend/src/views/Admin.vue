@@ -178,6 +178,18 @@ const handleLogout = async () => {
   }
 }
 
+const loadStats = async () => {
+  try {
+    const res = await api.adminGetStats()
+    if (res.data && res.data.success) {
+      stats.value.totalMessages = res.data.total_messages ?? 0
+      stats.value.todayMessages = res.data.today_messages ?? 0
+    }
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  }
+}
+
 const loadRecentLogs = async () => {
   loadingLogs.value = true
   try {
@@ -194,6 +206,7 @@ const loadRecentLogs = async () => {
 }
 
 onMounted(() => {
+  loadStats()
   loadRecentLogs()
 })
 </script>

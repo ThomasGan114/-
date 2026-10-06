@@ -148,6 +148,35 @@ CORS 白名单在 [`backend/config.py`](backend/config.py) 的 `ALLOWED_ORIGINS`
 
 > 注意 `netlify.toml` 的优先级高于 Netlify 网页端的 Build settings，改配置文件即可生效。
 
+### 生产环境现状（2026-10 上线，维护时看这一节）
+
+| 部分 | 位置 / 配置 |
+| --- | --- |
+| 前端 | Netlify 站点 `https://tranquil-beijinho-43aae8.netlify.app`，从本仓库 `main` 分支自动构建（配置见根目录 [`netlify.toml`](netlify.toml)：`base=frontend`、`npm run build`、`publish=dist`、`NODE_VERSION=22`） |
+| 后端 | 腾讯云服务器 `193.112.17.150`；代码 `/www/wwwroot/default/backend/backend`，虚拟环境 `/www/wwwroot/default/backend/venv` |
+| 进程 | systemd 服务 **`campuswall`**：`venv/bin/uvicorn app:app --host 0.0.0.0 --port 5412`，`User=www`、`Restart=always`，已开机自启 |
+| 端口放行 | ① 腾讯云控制台**安全组**：放行 `TCP:5412`（来源 `0.0.0.0/0`）② **宝塔面板 → 安全**：放行 `5412/TCP`（宝塔防火墙直接写 iptables 的 `IN_BT` 链，漏了这条外网就是不通） |
+| 请求链路 | 浏览器 → Netlify（`/api/*`、`/static/*` 反向代理）→ `http://193.112.17.150:5412`；因此**无需 CORS 白名单、后端也无需 HTTPS 证书** |
+| 数据 | 留言库 `backend/static/messages/messages.db`、原图 `static/uploads/`、缩略图 `static/tiny_files/` —— 都在服务器上，**不在仓库里** |
+| 日志 | `backend/logs/info.log`（业务日志）、`journalctl -u campuswall`（服务日志） |
+
+服务器上的常用命令：
+
+```bash
+systemctl status campuswall --no-pager       # 服务状态
+systemctl restart campuswall                 # 改完后端代码后重启
+journalctl -u campuswall -n 50 --no-pager    # 启动/报错日志
+ss -lntp | grep ':5412'                      # 确认是谁在监听 5412
+tail -f /www/wwwroot/default/backend/backend/logs/info.log   # 实时业务日志
+```
+
+维护注意：
+
+- **前端生产构建必须走同源**：`frontend/.env.production` 里 `VITE_API_BASE_URL` 保持留空（`api.js` 把「显式留空」视为同源，交由 Netlify 反向代理）。若在构建里写死后端地址，浏览器会绕过代理直接跨域请求而被拒。
+- **后端没有 CI**：改完 `backend/` 的代码要手动把对应文件上传到服务器，再 `systemctl restart campuswall`；只改前端则提交推送后 Netlify 会自动重建。
+- 同一个 5412 端口只能有一个进程监听：若用 `systemctl` 管理服务，就**不要**再手动前台跑 `uvicorn`，否则 systemd 会因 `address already in use` 无限重启。
+- 建议用宝塔「计划任务」每天打包备份 `backend/static/`。
+
 ### 后端 → 需要能常驻 Python 的环境
 
 Netlify / Cloudflare Pages 这类静态托管**跑不了 FastAPI**，后端需要 VPS、Docker、Render、Railway 等。切换后端地址时二选一：

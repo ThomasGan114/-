@@ -6,9 +6,10 @@ import json
 import uuid
 import re
 import hmac
+import time
 import shutil
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from fastapi import APIRouter, Request, Form, File, UploadFile, Depends, HTTPException, Cookie
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, RedirectResponse
@@ -101,14 +102,66 @@ async def verify_admin_login(request: Request):
     else:
         return JSONResponse(content={"success": False, "error": "未登录或登录过期"})
 
+# ==================== 登录频率限制（内存实现，不引入额外依赖） ====================
+LOGIN_WINDOW_SECONDS = 60   # 统计窗口（秒）
+LOGIN_MAX_ATTEMPTS = 10     # 同一 IP 在窗口内允许的登录尝试次数
+_login_attempts: Dict[str, List[float]] = {}
+
+
+def is_login_rate_limited(client_ip: str) -> bool:
+    """同一 IP 在窗口内尝试次数超限则返回 True（防爆破）"""
+    now = time.time()
+    recent = [t for t in _login_attempts.get(client_ip, []) if now - t < LOGIN_WINDOW_SECONDS]
+    if len(recent) >= LOGIN_MAX_ATTEMPTS:
+        _login_attempts[client_ip] = recent
+        return True
+    recent.append(now)
+    _login_attempts[client_ip] = recent
+    return False
+
+
+def reset_login_attempts(client_ip: str):
+    """登录成功后清空该 IP 的失败计数"""
+    _login_attempts.pop(client_ip, None)
+
+
+@router.get("/api/stats")
+async def admin_stats(request: Request):
+    """后台仪表盘统计：总留言数 / 今日留言数 / 已审核数"""
+    admin_user, admin_password = get_admin_session(request)
+    if not verify_admin(admin_user, admin_password):
+        return JSONResponse(status_code=401, content={"success": False, "error": "未登录或登录过期"})
+
+    mm = get_message_manager()
+    if mm is None:
+        return {"success": False, "error": "消息管理器未初始化"}
+
+    messages = mm.get_all_messages() or []
+    today = datetime.now().strftime('%Y-%m-%d')
+    return {
+        "success": True,
+        "total_messages": len(messages),
+        "today_messages": sum(1 for m in messages if str(m.get('timestamp', '')).startswith(today)),
+        "approved_messages": len(get_approved_ids())
+    }
+
+
 @router.post("/login")
 async def admin_login(request: Request):
-    """管理员登录处理"""
+    """管理员登录处理（带失败频率限制）"""
+    client_ip = request.client.host if request.client else 'unknown'
+    if is_login_rate_limited(client_ip):
+        return JSONResponse(
+            status_code=429,
+            content={"success": False, "error": f"尝试过于频繁，请 {LOGIN_WINDOW_SECONDS} 秒后再试"}
+        )
+
     form = await request.form()
     admin_user = form.get('username', '')
     admin_password = form.get('password', '')
     
     if verify_admin(admin_user, admin_password):
+        reset_login_attempts(client_ip)
         print(f"管理员 {admin_user} 登录成功")
         response = JSONResponse(content={"success": True})
         response.set_cookie('admin_user', admin_user, max_age=60*60*24*7)
