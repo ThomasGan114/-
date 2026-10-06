@@ -119,6 +119,7 @@ CORS 白名单在 [`backend/config.py`](backend/config.py) 的 `ALLOWED_ORIGINS`
 | `backend/static/tiny_files/` | 图片/视频缩略图（列表页加载的就是它） |
 | `backend/static/notice.json` | 当前生效的公告 |
 | `backend/admin_log.json`、`manage_message.json` | 管理员操作日志、待审核记录 |
+| `backend/polls.json` | 投票数据（标题、票数、投过票的设备标识） |
 | `backend/logs/info.log` | 运行日志 |
 | `backend/.env`、`frontend/node_modules/`、`frontend/dist/`、`backend/.venv/` | 配置与依赖产物 |
 
@@ -134,7 +135,7 @@ CORS 白名单在 [`backend/config.py`](backend/config.py) 的 `ALLOWED_ORIGINS`
 | `/user` | [`routes/users.py`](backend/routes/users.py) | `GET /user/{id}/avatar`、`POST /user/login` |
 | 其他 | [`app.py`](backend/app.py) | `GET /health`、`POST /api/chunked_upload`、`POST /api/merge_chunks`、`POST /api/direct_upload` |
 | 静态 | `app.mount("/static")` | `/static/uploads/<file>`、`/static/tiny_files/<file>` |
-| 预留 | [`services/polls.js`](frontend/src/services/polls.js) | `GET /api/polls`、`POST /api/polls`、`POST /api/polls/{id}/vote`（后端尚未实现，前端目前用本地数据） |
+| `/api/polls` | [`routes/polls.py`](backend/routes/polls.py) | `GET /api/polls?voter_id=`（列表，含本设备投票状态）、`POST /api/polls`（发起）、`POST /api/polls/{id}/vote`（投票）；数据存 `backend/polls.json`，按设备 `voter_id` 去重 |
 
 ## 部署
 

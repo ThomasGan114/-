@@ -142,9 +142,9 @@ export default {
     return api.post('/api/notice')
   },
 
-  // 投票（预留：后端实现 /api/polls 后，把 services/polls.js 里的 USE_REMOTE_API 改成 true 即启用）
-  getPolls() {
-    return api.get('/api/polls')
+  // 投票（后端实现见 backend/routes/polls.py）
+  getPolls(voterId) {
+    return api.get('/api/polls', { params: voterId ? { voter_id: voterId } : {} })
   },
   createPoll(data) {
     return api.post('/api/polls', data)
