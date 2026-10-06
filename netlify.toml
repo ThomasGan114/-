@@ -16,24 +16,25 @@
   NODE_VERSION = "22"
 
 # ---------------------------------------------------------------------------
-# 反向代理
+# 反向代理：把接口与静态资源请求转发到自建后端
 #
-# 线上后端 api-eo.long-gao.com 的 CORS 白名单里没有 *.netlify.app，
-# 浏览器发预检 OPTIONS 会被它以 400 拒绝 —— 于是页面报「网络连接失败」。
-# 这里把接口和静态资源请求转发到后端，浏览器看到的是「同源请求」，
-# 根本不触发 CORS，也就无需改动后端或域名。
+# 后端部署在腾讯云 193.112.17.150:5412（FastAPI，systemd 服务名 campuswall）。
+# 浏览器只访问 Netlify 的同源地址，因此：
+#   1. 不会触发 CORS —— 无需把 *.netlify.app 加进后端的 ALLOWED_ORIGINS；
+#   2. 后端也不需要 HTTPS 证书（这一跳是 Netlify 服务器之间的请求）。
 #
+# 以后换后端地址，只改下面两个 to 即可。
 # 规则顺序很重要：具体路径在前，SPA 回退放最后。
 # ---------------------------------------------------------------------------
 
 [[redirects]]
   from = "/api/*"
-  to = "https://api-eo.long-gao.com/api/:splat"
+  to = "http://193.112.17.150:5412/api/:splat"
   status = 200
 
 [[redirects]]
   from = "/static/*"
-  to = "https://api-eo.long-gao.com/static/:splat"
+  to = "http://193.112.17.150:5412/static/:splat"
   status = 200
 
 # SPA 回退：站内不存在的路径交给前端路由（vue-router history 模式），
