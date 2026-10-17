@@ -153,7 +153,7 @@ CORS 白名单在 [`backend/config.py`](backend/config.py) 的 `ALLOWED_ORIGINS`
 
 | 部分 | 位置 / 配置 |
 | --- | --- |
-| 前端 | Netlify 站点 `https://tranquil-beijinho-43aae8.netlify.app`，从本仓库 `main` 分支自动构建（配置见根目录 [`netlify.toml`](netlify.toml)：`base=frontend`、`npm run build`、`publish=dist`、`NODE_VERSION=22`） |
+| 前端 | Netlify 站点，自定义域名 **`https://sggzy.online`**（DNSPod 解析：`@` A → `75.2.60.5`、`www` CNAME → `tranquil-beijinho-43aae8.netlify.app`；证书由 Netlify 自动签发 Let's Encrypt）；Netlify 默认域名 `https://tranquil-beijinho-43aae8.netlify.app` 仍可访问。从本仓库 `main` 分支自动构建（配置见根目录 [`netlify.toml`](netlify.toml)：`base=frontend`、`npm run build`、`publish=dist`、`NODE_VERSION=22`） |
 | 后端 | 腾讯云服务器 `193.112.17.150`；代码 `/www/wwwroot/default/backend/backend`，虚拟环境 `/www/wwwroot/default/backend/venv` |
 | 进程 | systemd 服务 **`campuswall`**：`venv/bin/uvicorn app:app --host 0.0.0.0 --port 5412`，`User=www`、`Restart=always`，已开机自启 |
 | 端口放行 | ① 腾讯云控制台**安全组**：放行 `TCP:5412`（来源 `0.0.0.0/0`）② **宝塔面板 → 安全**：放行 `5412/TCP`（宝塔防火墙直接写 iptables 的 `IN_BT` 链，漏了这条外网就是不通） |
