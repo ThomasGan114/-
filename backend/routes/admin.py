@@ -22,6 +22,74 @@ from deps import get_message_manager
 settings = get_settings()
 router = APIRouter()
 
+# 缩略图目录（留言删除时一并清理）
+TINY_FOLDER = os.path.join('static', 'tiny_files')
+
+
+# ==================== 留言/评论删除后清理附件 ====================
+
+def collect_files_of_message(message: dict) -> List[str]:
+    """收集一条留言自身 + 它下面评论所引用的文件名"""
+    if not isinstance(message, dict):
+        return []
+    names = []
+    for name in (message.get('files') or []):
+        if isinstance(name, str) and name:
+            names.append(name)
+    for comment in (message.get('comments') or []):
+        if isinstance(comment, dict):
+            for name in (comment.get('files') or []):
+                if isinstance(name, str) and name:
+                    names.append(name)
+    return names
+
+
+def collect_referenced_files(mm, exclude_message_id=None, exclude_comment_id=None) -> set:
+    """当前仍被引用的所有文件名。
+
+    基于内存里的 msgLst 统计，并显式排除"正在被删除"的对象：
+    数据库写入是异步的，删完立刻查库那条记录可能还在，会把附件误判成"仍被引用"。
+    """
+    referenced = set()
+    for message in (mm.msgLst or []):
+        if exclude_message_id is not None and message.get('id') == exclude_message_id:
+            if exclude_comment_id is None:
+                continue  # 整条留言要删掉，它的文件都不算引用
+            # 只删其中一条评论：留言自身的文件仍算引用，评论里跳过被删的那条
+            for name in (message.get('files') or []):
+                if isinstance(name, str) and name:
+                    referenced.add(name)
+            for comment in (message.get('comments') or []):
+                if comment.get('id') == exclude_comment_id:
+                    continue
+                for name in (comment.get('files') or []):
+                    if isinstance(name, str) and name:
+                        referenced.add(name)
+            continue
+        referenced.update(collect_files_of_message(message))
+    return referenced
+
+
+def delete_unreferenced_files(names: List[str], referenced: set) -> List[str]:
+    """删除不再被任何留言/评论引用的原文件与缩略图，返回实际删除的文件名"""
+    deleted = []
+    for name in set(names):
+        # 只接受纯文件名，避免 ../ 之类的路径穿越
+        if not isinstance(name, str) or not name or os.path.basename(name) != name:
+            continue
+        if name in referenced:
+            continue  # 还被别的留言/评论引用，不能删
+        for folder in (settings.UPLOAD_FOLDER, TINY_FOLDER):
+            path = os.path.join(folder, name)
+            try:
+                if os.path.isfile(path):
+                    os.remove(path)
+                    if name not in deleted:
+                        deleted.append(name)  # 原图与缩略图同名，只报告一次
+            except OSError as error:
+                print(f"清理文件失败 {path}: {error}")
+    return deleted
+
 # 线程池
 from concurrent.futures import ThreadPoolExecutor
 executor = ThreadPoolExecutor(max_workers=70)
@@ -240,12 +308,25 @@ async def delete_message(message_id: int, request: Request):
         return {"success": False, "error": "消息管理器未初始化"}
     
     try:
+        # 删除前先记下这条留言（含其评论）引用了哪些附件
+        target = next((m for m in (mm.msgLst or []) if m.get('id') == message_id), None)
+        target_files = collect_files_of_message(target)
+
         result = mm.delete_message(message_id)
-        
-        if result['success']:
+
+        if result.get('success'):
+            # 删除后再算还剩哪些引用，只有彻底没人用的文件才清理
+            cleaned = delete_unreferenced_files(
+                target_files,
+                collect_referenced_files(mm, exclude_message_id=message_id)
+            )
+            result['cleaned_files'] = cleaned
+
             log_msg = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}    {admin_user}删除了深高园校园墙的消息 {message_id}"
+            if cleaned:
+                log_msg += f"，并清理 {len(cleaned)} 个附件"
             log_admin_data(log_msg)
-        
+
         return result
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -268,9 +349,26 @@ async def delete_comment(message_id: int, comment_id: str, request: Request):
         return {"success": False, "error": "消息管理器未初始化"}
     
     try:
+        # 删除前先记下这条评论引用了哪些附件
+        target_msg = next((m for m in (mm.msgLst or []) if m.get('id') == message_id), None)
+        target_comment = None
+        if target_msg:
+            target_comment = next(
+                (c for c in (target_msg.get('comments') or []) if c.get('id') == comment_id), None
+            )
+        comment_files = [f for f in (target_comment or {}).get('files') or [] if isinstance(f, str) and f]
+
         result = mm.delete_comment(message_id, comment_id)
-        if result['success']:
+        if result.get('success'):
+            cleaned = delete_unreferenced_files(
+                comment_files,
+                collect_referenced_files(mm, exclude_message_id=message_id, exclude_comment_id=comment_id)
+            )
+            result['cleaned_files'] = cleaned
+
             log_msg = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}    {admin_user}删除了消息 {message_id} 的评论 {comment_id}"
+            if cleaned:
+                log_msg += f"，并清理 {len(cleaned)} 个附件"
             log_admin_data(log_msg)
         return result
     except Exception as e:

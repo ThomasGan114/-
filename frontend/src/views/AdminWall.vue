@@ -179,9 +179,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
+
+const Alert = inject('Alert', null)
+
+// 提示本次删除顺带清理了多少附件
+const notifyCleaned = (cleaned) => {
+  const count = Array.isArray(cleaned) ? cleaned.length : 0
+  if (count > 0 && Alert && typeof Alert.showTopRightAlert === 'function') {
+    Alert.showTopRightAlert(`已同时清理 ${count} 个附件文件`, 'success', '删除成功')
+  }
+}
 
 const router = useRouter()
 
@@ -293,6 +303,7 @@ const deleteMessage = async () => {
   try {
     const res = await api.adminDeleteMessage(messageToDelete.value.id)
     if (res.data && res.data.success) {
+      notifyCleaned(res.data.cleaned_files)
       messages.value = messages.value.filter(m => m.id !== messageToDelete.value.id)
       const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'))
       modal.hide()
@@ -326,6 +337,7 @@ const deleteComment = async (messageId, commentId) => {
   try {
     const res = await api.adminDeleteComment(messageId, commentId)
     if (res.data && res.data.success) {
+      notifyCleaned(res.data.cleaned_files)
       if (selectedMessage.value && selectedMessage.value.comments) {
         selectedMessage.value.comments = selectedMessage.value.comments.filter(c => c.id !== commentId)
       }
