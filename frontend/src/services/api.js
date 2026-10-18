@@ -14,7 +14,9 @@ const API_BASE_URL = (ENV_BASE_URL === undefined || ENV_BASE_URL === null)
   : ENV_BASE_URL
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  // baseURL 为空（生产同源）时用 '/'：
+  // 否则像 'api/admin/xxx' 这种相对路径会被按当前路由解析成 /admin/api/admin/xxx
+  baseURL: API_BASE_URL || '/',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -173,25 +175,25 @@ export default {
   adminGetMessages(params = {}) {
     // 注意：路径不能带末尾斜杠。后端对 /messages/ 会 307 跳到绝对地址
     // http://193.112.17.150:5412/...，而后台是 HTTPS 页面，浏览器会按混合内容拦截。
-    return api.get('api/admin/api/messages', { params })
+    return api.get('/api/admin/api/messages', { params })
   },
   adminGetMessage(messageId) {
-    return api.get(`api/admin/api/get_message/${messageId}`)
+    return api.get(`/api/admin/api/get_message/${messageId}`)
   },
   adminDeleteMessage(messageId) {
-    return api.post(`api/admin/delete_message/${messageId}`)
+    return api.post(`/api/admin/delete_message/${messageId}`)
   },
   adminDeleteComment(messageId, commentId) {
-    return api.post(`api/admin/api/delete_comment/${messageId}/${commentId}`)
+    return api.post(`/api/admin/api/delete_comment/${messageId}/${commentId}`)
   },
   adminApproveMessage(messageId) {
-    return api.post(`api/admin/approve_message/${messageId}`)
+    return api.post(`/api/admin/approve_message/${messageId}`)
   },
   adminRepairMessage(messageId) {
-    return api.post(`api/admin/repair_message/${messageId}`)
+    return api.post(`/api/admin/repair_message/${messageId}`)
   },
   adminGetApprovedIds() {
-    return api.get(`api/admin/api/approved_ids`)
+    return api.get(`/api/admin/api/approved_ids`)
   },
   adminGetWall() {
     return api.get('/api/admin/wall')
