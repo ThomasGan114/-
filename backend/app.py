@@ -129,6 +129,22 @@ app.add_middleware(
     max_age=3600,
 )
 
+# 反代后面的跳转修正：FastAPI 的 307（如补末尾斜杠）会生成绝对地址，
+# 而经过 Netlify 反向代理后后端看到的 Host 是内网/裸 IP，浏览器会拿到
+# http://193.112.17.150:5412/...，在 HTTPS 页面上被当作混合内容直接拦截。
+# 这里统一把绝对跳转改写成相对路径，交给当前域名处理。
+@app.middleware("http")
+async def keep_redirects_relative(request: Request, call_next):
+    response = await call_next(request)
+    location = response.headers.get("location")
+    if location and location.startswith(("http://", "https://")):
+        from urllib.parse import urlsplit
+        parts = urlsplit(location)
+        if parts.path:
+            response.headers["location"] = parts.path + (f"?{parts.query}" if parts.query else "")
+    return response
+
+
 # 挂载静态文件目录
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

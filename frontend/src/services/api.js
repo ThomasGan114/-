@@ -171,7 +171,9 @@ export default {
 
   // 留言管理
   adminGetMessages(params = {}) {
-    return api.get(`api/admin/api/messages/`, { params })
+    // 注意：路径不能带末尾斜杠。后端对 /messages/ 会 307 跳到绝对地址
+    // http://193.112.17.150:5412/...，而后台是 HTTPS 页面，浏览器会按混合内容拦截。
+    return api.get('api/admin/api/messages', { params })
   },
   adminGetMessage(messageId) {
     return api.get(`api/admin/api/get_message/${messageId}`)
