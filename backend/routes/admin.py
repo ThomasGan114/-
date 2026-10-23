@@ -88,6 +88,13 @@ def delete_unreferenced_files(names: List[str], referenced: set) -> List[str]:
                         deleted.append(name)  # 原图与缩略图同名，只报告一次
             except OSError as error:
                 print(f"清理文件失败 {path}: {error}")
+        # 视频预览图命名为 <文件名>.jpg，也要一并清掉
+        poster_path = os.path.join(TINY_FOLDER, name + '.jpg')
+        try:
+            if os.path.isfile(poster_path):
+                os.remove(poster_path)
+        except OSError as error:
+            print(f"清理视频预览图失败 {poster_path}: {error}")
     return deleted
 
 # 线程池

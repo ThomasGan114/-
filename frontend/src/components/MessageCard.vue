@@ -31,12 +31,18 @@
                 @error="onFileImageError($event, file)"
               >
             </div>
-            <!-- 视频缩略图 -->
-            <div v-else-if="isVideo(file)" class="file-link file-media-wrapper">
-              <div class="file-thumbnail">
-                <i class="bi bi-play-circle-fill"></i>
-                <span class="file-type-label">视频</span>
-              </div>
+            <!-- 视频：第一帧预览图 + 半透明播放标志（取不到预览图时自动回退到占位底色） -->
+            <div v-else-if="isVideo(file)" class="file-link file-video-wrapper">
+              <img
+                :src="getVideoPosterUrl(file)"
+                :alt="file"
+                class="file-image video-poster"
+                loading="lazy"
+                @error="onVideoPosterError($event)"
+              >
+              <span class="video-badge" aria-hidden="true">
+                <i class="bi bi-play-fill"></i>
+              </span>
             </div>
             <!-- PDF 文件 -->
             <div v-else-if="isPdf(file)" class="file-link file-media-wrapper">
@@ -323,6 +329,19 @@ const getFileTinyUrl = (file) => {
 
 const getFileUploadUrl = (file) => {
   return staticUrl + 'uploads/' + file
+}
+
+// 视频预览图：后端用 ffmpeg 抽第一帧，命名规则 <视频文件名>.jpg，存在 tiny_files 下
+const getVideoPosterUrl = (file) => {
+  return staticUrl + 'tiny_files/' + file + '.jpg'
+}
+
+// 预览图缺失（未装 ffmpeg / 抽取失败）时隐藏图片，露出底下的深色占位
+const onVideoPosterError = (event) => {
+  const img = event && event.target
+  if (img) {
+    img.style.display = 'none'
+  }
 }
 
 // 缩略图不存在时回退到原图，避免整张图裂开
@@ -664,6 +683,51 @@ nextTick(() => {
 
 .file-item:hover .file-image {
   transform: scale(1.05);
+}
+
+/* ==================== 视频：第一帧预览图 + 半透明播放标志 ==================== */
+.file-video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* 预览图取不到时的兜底底色（与原来的视频占位一致） */
+  background: linear-gradient(135deg, #2a2f3d 0%, #14171f 100%);
+}
+
+.video-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.32);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  color: #fff;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 2px;
+  pointer-events: none;
+  backdrop-filter: blur(1px);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.file-item:hover .video-badge {
+  background: rgba(0, 0, 0, 0.48);
+  transform: scale(1.08);
 }
 
 .file-media-wrapper {

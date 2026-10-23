@@ -3,6 +3,7 @@
 """
 import os
 import re
+import shutil
 import subprocess
 import json
 from typing import List, Tuple, Set, Optional
@@ -161,12 +162,49 @@ def making_tiny_files(filenames, tiny_folder: str = "static/tiny_files"):
         except Exception as e:
             print(f"生成图片缩略图失败 {image_file}: {e}")
     for video_file in video_files:
-        if compress_video(
+        # 视频生成「第一帧预览图」：与图片缩略图同高（100px），文件名追加 .jpg
+        poster_name = video_file + '.jpg'
+        if make_video_poster(
             os.path.join(upload_folder, video_file),
-            os.path.join(tiny_folder, video_file)
+            os.path.join(tiny_folder, poster_name)
         ):
-            done.append(video_file)
+            done.append(poster_name)
     return done
+
+
+def make_video_poster(input_file: str, output_file: str, height: int = 100) -> bool:
+    """用 ffmpeg 抽取视频**第一帧**作为预览图（高度与图片缩略图一致，等比缩放）
+
+    - 兼容主流容器/编码（mp4 / mov / m4v / mkv / avi / webm / flv …）和任意分辨率：
+      解码交给 ffmpeg，再用 scale 统一缩放到目标高度（-2 保证宽度为偶数）
+    - 手机竖拍视频带旋转元数据时 ffmpeg 会自动转正
+    - 服务器没装 ffmpeg 或抽取失败时返回 False，前端会自动回退到占位样式
+    """
+    if not os.path.isfile(input_file):
+        print(f"视频不存在，跳过预览图: {input_file}")
+        return False
+    if shutil.which('ffmpeg') is None:
+        print('未找到 ffmpeg，无法生成视频预览图（请在服务器安装 ffmpeg）')
+        return False
+
+    command = [
+        'ffmpeg', '-hide_banner', '-loglevel', 'error',
+        '-i', input_file,
+        '-vf', f'scale=-2:{height}',
+        '-frames:v', '1',
+        '-q:v', '4',
+        '-y', output_file,
+    ]
+    try:
+        subprocess.run(command, check=True, capture_output=True, timeout=60)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as error:
+        print(f"生成视频预览图失败 {os.path.basename(input_file)}: {error}")
+        return False
+
+    if not os.path.isfile(output_file) or os.path.getsize(output_file) == 0:
+        print(f"视频预览图为空 {os.path.basename(input_file)}")
+        return False
+    return True
 
 
 def compress_video(input_file: str, output_file: str, fps: int = 24, height: int = 100) -> bool:
