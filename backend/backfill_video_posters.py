@@ -80,7 +80,17 @@ def main():
     if shutil.which('ffmpeg') is None:
         raise SystemExit('[X] 没找到 ffmpeg，请先安装后再运行本脚本（能执行 ffmpeg -version 即可）')
 
-    from tools import poster_is_too_dark
+    # 项目依赖（Pillow 等）装在 venv 里，用系统 python3 运行会报 ModuleNotFoundError
+    try:
+        from tools import poster_is_too_dark  # noqa: F401
+    except ModuleNotFoundError as error:
+        venv_python = os.path.join(os.path.dirname(os.path.dirname(BASE)), 'venv', 'bin', 'python')
+        raise SystemExit(
+            f'[X] 缺少依赖模块：{error.name}\n'
+            f'    本脚本需要项目 venv 里的依赖，请改用：\n'
+            f'    {venv_python} backfill_video_posters.py\n'
+            f'    （即 /www/wwwroot/default/backend/venv/bin/python，不要用系统自带的 python3）'
+        )
 
     videos = sorted(collect_videos(DB_PATH))
     print(f'共发现视频 {len(videos)} 个')
