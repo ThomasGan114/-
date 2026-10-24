@@ -66,9 +66,10 @@ def collect_videos(db_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='为已有视频补生成第一帧预览图')
+    parser = argparse.ArgumentParser(description='为已有视频补生成预览图')
     parser.add_argument('--apply', action='store_true', help='真正生成（默认只统计）')
     parser.add_argument('--height', type=int, default=100, help='预览图高度，默认 100（与图片缩略图一致）')
+    parser.add_argument('--force', action='store_true', help='连已经存在且够亮的预览图也重新生成')
     args = parser.parse_args()
 
     print('=' * 60)
@@ -79,24 +80,29 @@ def main():
     if shutil.which('ffmpeg') is None:
         raise SystemExit('[X] 没找到 ffmpeg，请先安装后再运行本脚本（能执行 ffmpeg -version 即可）')
 
+    from tools import poster_is_too_dark
+
     videos = sorted(collect_videos(DB_PATH))
     print(f'共发现视频 {len(videos)} 个')
 
-    missing = []
+    todo = []
     for name in videos:
         if not os.path.isfile(os.path.join(UPLOADS, name)):
             print(f'  [!] 原视频不存在，跳过: {name}')
             continue
         poster = os.path.join(TINY, name + '.jpg')
-        if os.path.isfile(poster) and os.path.getsize(poster) > 0:
-            continue
-        missing.append(name)
+        if not (os.path.isfile(poster) and os.path.getsize(poster) > 0):
+            todo.append((name, '缺预览图'))
+        elif args.force:
+            todo.append((name, '强制重建'))
+        elif poster_is_too_dark(poster):
+            todo.append((name, '预览图是黑帧'))
 
-    print(f'缺预览图 {len(missing)} 个')
-    for name in missing:
-        print(f'  - {name}')
+    print(f'待处理 {len(todo)} 个')
+    for name, reason in todo:
+        print(f'  - [{reason}] {name}')
 
-    if not missing:
+    if not todo:
         print('\n无需处理 [OK]')
         return
 
@@ -108,8 +114,8 @@ def main():
 
     os.makedirs(TINY, exist_ok=True)
     ok = 0
-    for index, name in enumerate(missing, 1):
-        print(f'[{index}/{len(missing)}] {name} ... ', end='', flush=True)
+    for index, (name, reason) in enumerate(todo, 1):
+        print(f'[{index}/{len(todo)}] {name} ({reason}) ... ', end='', flush=True)
         success = make_video_poster(
             os.path.join(UPLOADS, name),
             os.path.join(TINY, name + '.jpg'),
@@ -120,7 +126,7 @@ def main():
             ok += 1
 
     print('\n' + '=' * 60)
-    print(f'完成：成功 {ok} 个，失败 {len(missing) - ok} 个')
+    print(f'完成：成功 {ok} 个，失败 {len(todo) - ok} 个')
     print('=' * 60)
 
 

@@ -173,12 +173,15 @@ def making_tiny_files(filenames, tiny_folder: str = "static/tiny_files"):
 
 
 def make_video_poster(input_file: str, output_file: str, height: int = 100) -> bool:
-    """用 ffmpeg 抽取视频**第一帧**作为预览图（高度与图片缩略图一致，等比缩放）
+    """抽取视频的**有画面感的一帧**作为预览图（高度与图片缩略图一致）
 
-    - 兼容主流容器/编码（mp4 / mov / m4v / mkv / avi / webm / flv …）和任意分辨率：
-      解码交给 ffmpeg，再用 scale 统一缩放到目标高度（-2 保证宽度为偶数）
+    为什么不直接取第 0 秒：很多手机录像、录屏、剪辑视频开头是黑帧或淡入，
+    取第 0 秒会得到一张全黑的图。这里改为依次尝试多个时间点，用亮度给候选帧打分，
+    选最亮的一张；足够亮就提前结束，避免长视频上浪费太多时间。
+
+    - 兼容主流容器/编码（mp4 / mov / m4v / mkv / avi / webm / flv …）与任意分辨率
     - 手机竖拍视频带旋转元数据时 ffmpeg 会自动转正
-    - 服务器没装 ffmpeg 或抽取失败时返回 False，前端会自动回退到占位样式
+    - 未安装 ffmpeg 或抽帧全部失败时返回 False（前端自动回退到占位样式）
     """
     if not os.path.isfile(input_file):
         print(f"视频不存在，跳过预览图: {input_file}")
@@ -187,8 +190,60 @@ def make_video_poster(input_file: str, output_file: str, height: int = 100) -> b
         print('未找到 ffmpeg，无法生成视频预览图（请在服务器安装 ffmpeg）')
         return False
 
+    candidates = []
+    best_path, best_mean = None, -1.0
+    try:
+        for index, timestamp in enumerate(POSTER_CANDIDATE_TIMES):
+            temp_path = f"{output_file}.c{index}.tmp.jpg"
+            if not _extract_video_frame(input_file, temp_path, timestamp, height):
+                continue
+            mean = _frame_brightness(temp_path)
+            if mean is None:
+                _silent_remove(temp_path)
+                continue
+            if mean > best_mean:
+                if best_path:
+                    _silent_remove(best_path)
+                best_mean, best_path = mean, temp_path
+            else:
+                _silent_remove(temp_path)
+            if best_mean >= POSTER_GOOD_ENOUGH_BRIGHTNESS:
+                break
+
+        if not best_path:
+            print(f"视频抽帧失败 {os.path.basename(input_file)}")
+            return False
+        if os.path.exists(output_file):
+            _silent_remove(output_file)
+        os.replace(best_path, output_file)
+        print(f"视频预览图已生成 {os.path.basename(input_file)}（亮度 {best_mean:.0f}）")
+        return True
+    finally:
+        if best_path and os.path.exists(best_path):
+            _silent_remove(best_path)
+        for index in range(len(POSTER_CANDIDATE_TIMES)):
+            _silent_remove(f"{output_file}.c{index}.tmp.jpg")
+
+
+# 抽帧候选时间点（秒）：先跳过片头黑帧，再从后往前兜底，最后才是第 0 秒
+POSTER_CANDIDATE_TIMES = (1.0, 2.0, 4.0, 8.0, 0.3, 0.0)
+# 灰度均值达到该值就认为画面足够亮，停止继续尝试
+POSTER_GOOD_ENOUGH_BRIGHTNESS = 28.0
+
+
+def _silent_remove(path: str) -> None:
+    try:
+        if path and os.path.exists(path):
+            os.remove(path)
+    except OSError:
+        pass
+
+
+def _extract_video_frame(input_file: str, output_file: str, timestamp: float, height: int) -> bool:
+    """在指定时间点抽一帧并缩放到目标高度，成功返回 True"""
     command = [
         'ffmpeg', '-hide_banner', '-loglevel', 'error',
+        '-ss', f'{max(timestamp, 0):.2f}',
         '-i', input_file,
         '-vf', f'scale=-2:{height}',
         '-frames:v', '1',
@@ -197,14 +252,25 @@ def make_video_poster(input_file: str, output_file: str, height: int = 100) -> b
     ]
     try:
         subprocess.run(command, check=True, capture_output=True, timeout=60)
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as error:
-        print(f"生成视频预览图失败 {os.path.basename(input_file)}: {error}")
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
         return False
+    return os.path.isfile(output_file) and os.path.getsize(output_file) > 0
 
-    if not os.path.isfile(output_file) or os.path.getsize(output_file) == 0:
-        print(f"视频预览图为空 {os.path.basename(input_file)}")
-        return False
-    return True
+
+def _frame_brightness(path: str) -> Optional[float]:
+    """帧的平均亮度（0-255），读不出来返回 None"""
+    try:
+        from PIL import ImageStat
+        with Image.open(path) as image:
+            return ImageStat.Stat(image.convert('L')).mean[0]
+    except Exception:
+        return None
+
+
+def poster_is_too_dark(path: str, threshold: float = POSTER_GOOD_ENOUGH_BRIGHTNESS) -> bool:
+    """判断已生成的预览图是不是黑帧（用于补生成时跳过好图、重做黑图）"""
+    mean = _frame_brightness(path)
+    return mean is None or mean < threshold
 
 
 def compress_video(input_file: str, output_file: str, fps: int = 24, height: int = 100) -> bool:
