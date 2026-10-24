@@ -41,7 +41,7 @@
                 @error="onVideoPosterError($event)"
               >
               <span class="video-badge" aria-hidden="true">
-                <i class="bi bi-play-fill"></i>
+                <svg class="video-badge-icon" viewBox="0 0 24 24"><path d="M8 5.2v13.6L19 12z" /></svg>
               </span>
             </div>
             <!-- PDF 文件 -->
@@ -708,26 +708,41 @@ nextTick(() => {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 38px;
-  height: 38px;
-  margin: -19px 0 0 -19px;
+  /* 按磁贴比例自适应：手机上磁贴只有 50px，固定 38px 会显得巨大 */
+  width: 38%;
+  height: 38%;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 44px;
+  max-height: 44px;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.32);
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  color: #fff;
-  font-size: 1.1rem;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-left: 2px;
   pointer-events: none;
-  backdrop-filter: blur(1px);
   transition: background 0.2s, transform 0.2s;
+}
+
+.video-badge-icon {
+  width: 46%;
+  height: 46%;
+  fill: #fff;
+  margin-left: 6%; /* 光学居中：三角的视觉重心偏左 */
 }
 
 .file-item:hover .video-badge {
   background: rgba(0, 0, 0, 0.48);
-  transform: scale(1.08);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+@media (max-width: 640px) {
+  .video-badge {
+    border-width: 1.5px;
+  }
 }
 
 .file-media-wrapper {
