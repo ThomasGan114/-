@@ -18,6 +18,9 @@ from contextlib import contextmanager
 # 数据库文件名
 DB_NAME = os.path.join('static', 'messages', 'messages.db')
 
+# 热门留言条数上限（按点赞量取前 N 条）
+HOT_MESSAGES_LIMIT = 10
+
 # 确保数据库目录存在
 DB_DIR = os.path.dirname(DB_NAME)
 if DB_DIR and not os.path.exists(DB_DIR):
@@ -502,25 +505,28 @@ class MessageManagerClass:
     def get_tags(self) -> Set[str]:
         return self.partitionManager.get_tags()
     
-    def score_message(self, message: dict) -> float:
-        score = 0
-        score += (message['likes'] - message['dislikes']) * 10
-        score += len(message['files']) * 5
-        score += len(message.get('tags', [])) * 2
-        score += len(message['comments']) * 10
-        score += len(message['text'])
-        try:
-            score -= (datetime.now() - datetime.strptime(message['timestamp'], '%Y-%m-%d %H:%M:%S')).total_seconds() / 86400
-        except:
-            pass
-        return score
-    
     def refresh_hot_messages(self) -> List[dict]:
-        messages = self.get_all_messages()
-        messages.sort(key=lambda x: self.score_message(x), reverse=True)
-        hot_messages = messages[:20]
-        self.hot_messages = hot_messages
-        return hot_messages
+        """热门留言 = 全站**点赞量最高**的前 10 条
+
+        只统计有点赞（likes > 0）的留言，点赞相同再按评论数多者优先，
+        仍相同则新发布的排前面。刷新时机：服务启动时 + 每小时一次。
+        """
+        messages = [m for m in self.get_all_messages() if m.get('likes', 0) > 0]
+
+        def sort_key(message: dict):
+            try:
+                timestamp = datetime.strptime(message.get('timestamp', ''), '%Y-%m-%d %H:%M:%S')
+            except (TypeError, ValueError):
+                timestamp = datetime.min
+            return (
+                message.get('likes', 0),
+                len(message.get('comments') or []),
+                timestamp,
+            )
+
+        messages.sort(key=sort_key, reverse=True)
+        self.hot_messages = messages[:HOT_MESSAGES_LIMIT]
+        return self.hot_messages
 
     def get_hot_messages(self, like_list: List[int] = None, dislike_list: List[int] = None) -> List[dict]:
         if like_list is None:
