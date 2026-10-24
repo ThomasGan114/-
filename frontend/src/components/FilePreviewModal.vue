@@ -60,13 +60,26 @@
             </div>
           </div>
 
-          <!-- 内容区 -->
-          <div ref="stageRef" class="fv-stage" :class="'type-' + currentFileType">
+          <!-- 内容区：支持滚轮/双指缩放、拖动平移（微信式） -->
+          <div
+            ref="stageRef"
+            class="fv-stage"
+            :class="[('type-' + currentFileType), { 'is-zoomed': zoom > 1.01, 'is-panning': panning }]"
+            @wheel.prevent="onWheel"
+            @touchstart.passive="onStageTouchStart"
+            @touchmove="onStageTouchMove"
+            @touchend="onStageTouchEnd"
+            @touchcancel="onStageTouchEnd"
+            @pointerdown="onStagePointerDown"
+            @pointerup="onStagePointerUp"
+            @pointercancel="onStagePointerUp"
+          >
             <img
               v-if="currentFileType === 'image'"
               :src="currentFileUrl"
               :alt="currentFileName"
               class="fv-image"
+              :style="mediaTransformStyle"
               draggable="false"
             >
 
@@ -74,6 +87,7 @@
               v-else-if="currentFileType === 'video'"
               ref="videoRef"
               class="fv-video"
+              :style="mediaTransformStyle"
               :src="currentFileUrl"
               playsinline
               preload="metadata"
@@ -84,8 +98,7 @@
               @pause="isPlaying = false"
               @ended="onEnded"
               @volumechange="onVolumeChange"
-              @click="togglePlay"
-              @dblclick="toggleFullscreen"
+              @click="onVideoClick"
             ></video>
 
             <div v-else-if="currentFileType === 'audio'" class="fv-audio-box">
@@ -165,8 +178,14 @@
             </template>
           </div>
 
+          <!-- 缩放比例提示 -->
+          <div v-if="zoom > 1.01" class="fv-zoom-badge">{{ Math.round(zoom * 100) }}%</div>
+
           <!-- 更多菜单 -->
           <div v-if="menuOpen" class="fv-menu" @click.stop>
+            <button v-if="zoom > 1.01" class="fv-menu-item" @click="resetZoom(); menuOpen = false">
+              <i class="bi bi-arrows-angle-contract"></i> 还原为适应窗口
+            </button>
             <button class="fv-menu-item" @click="downloadFile(); menuOpen = false">
               <i class="bi bi-download"></i> 下载
             </button>
@@ -315,8 +334,16 @@ const clampPosition = (x, y) => {
 }
 
 const loadSavedSize = () => {
-  const fallbackWidth = Math.min(1000, Math.max(MIN_WIDTH, window.innerWidth - 160))
-  const fallbackHeight = Math.min(700, Math.max(MIN_HEIGHT, window.innerHeight - 140))
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  // 手机上默认接近全屏（微信式），桌面上留出边距
+  const narrow = vw < 640
+  const fallbackWidth = narrow
+    ? Math.max(MIN_WIDTH, vw - 16)
+    : Math.min(1000, Math.max(MIN_WIDTH, vw - 160))
+  const fallbackHeight = narrow
+    ? Math.max(MIN_HEIGHT, vh - 16)
+    : Math.min(700, Math.max(MIN_HEIGHT, vh - 140))
   let width = fallbackWidth
   let height = fallbackHeight
   try {
@@ -411,6 +438,8 @@ const touchDistance = (touches) => {
 
 const onTouchStart = (event) => {
   if (event.touches.length !== 2) return
+  // 双指落在画面区域 → 由 stage 的处理器缩放内容；落在顶栏/底栏/边框 → 缩放窗口
+  if (event.target && stageRef.value && stageRef.value.contains(event.target)) return
   pinchState = {
     distance: touchDistance(event.touches) || 1,
     width: shellWidth.value,
@@ -430,6 +459,181 @@ const onTouchEnd = (event) => {
   if (!pinchState) return
   pinchState = null
   saveSize()
+}
+
+// ---------- 内容缩放/平移（微信式） ----------
+const MAX_ZOOM = 5
+const ZOOM_EPSILON = 1.01
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const panning = ref(false)
+const pinching = ref(false)
+
+const mediaTransformStyle = computed(() => ({
+  transform: `translate3d(${panX.value}px, ${panY.value}px, 0) scale(${zoom.value})`,
+  transition: panning.value || pinching.value ? 'none' : 'transform 0.16s ease-out'
+}))
+
+const resetZoom = () => {
+  zoom.value = 1
+  panX.value = 0
+  panY.value = 0
+}
+
+const clampPan = () => {
+  const stage = stageRef.value
+  if (!stage) return
+  if (zoom.value <= ZOOM_EPSILON) {
+    panX.value = 0
+    panY.value = 0
+    return
+  }
+  const rect = stage.getBoundingClientRect()
+  const maxX = (rect.width * (zoom.value - 1)) / 2
+  const maxY = (rect.height * (zoom.value - 1)) / 2
+  panX.value = Math.min(Math.max(panX.value, -maxX), maxX)
+  panY.value = Math.min(Math.max(panY.value, -maxY), maxY)
+}
+
+/** 以屏幕坐标 (anchorX, anchorY) 为锚点缩放，锚点下的画面保持不动 */
+const applyZoom = (nextZoom, anchorX, anchorY) => {
+  const stage = stageRef.value
+  const clamped = Math.min(MAX_ZOOM, Math.max(1, nextZoom))
+  if (!stage) {
+    zoom.value = clamped
+    return
+  }
+  const rect = stage.getBoundingClientRect()
+  const offsetX = anchorX - (rect.left + rect.width / 2)
+  const offsetY = anchorY - (rect.top + rect.height / 2)
+  const ratio = clamped / (zoom.value || 1)
+  panX.value = offsetX - (offsetX - panX.value) * ratio
+  panY.value = offsetY - (offsetY - panY.value) * ratio
+  zoom.value = clamped
+  clampPan()
+}
+
+const onWheel = (event) => {
+  if (!['image', 'video'].includes(currentFileType.value)) return
+  // 按滚动量缩放：鼠标一格 deltaY≈±100 → 约 ±10%，触控板/大滚动更明显
+  const step = Math.min(0.5, Math.abs(event.deltaY) / 1000)
+  const factor = event.deltaY > 0 ? 1 - step : 1 + step
+  applyZoom(zoom.value * factor, event.clientX, event.clientY)
+}
+
+/** 双击/双击屏幕统一处理：还原或放大到 2.5 倍 */
+const handleDoubleZoom = (clientX, clientY) => {
+  if (!['image', 'video'].includes(currentFileType.value)) return
+  if (zoom.value > ZOOM_EPSILON) {
+    resetZoom()
+  } else {
+    applyZoom(2.5, clientX, clientY)
+  }
+}
+
+// 双击检测（pointerup 计时）：比 dblclick 更可靠，鼠标与触摸统一
+let lastTapInfo = { time: 0, x: 0, y: 0 }
+let stageDownPos = null
+const DOUBLE_TAP_DELAY = 320
+const DOUBLE_TAP_DISTANCE = 26
+const PAN_THRESHOLD = 8
+
+const onStagePointerDown = (event) => {
+  stageDownPos = { x: event.clientX, y: event.clientY }
+  onPanStart(event)
+}
+
+const onStagePointerUp = (event) => {
+  const down = stageDownPos
+  stageDownPos = null
+  onPanEnd()
+  if (!down) return
+  const moved = Math.hypot(event.clientX - down.x, event.clientY - down.y)
+  if (moved > PAN_THRESHOLD) {
+    lastTapInfo = { time: 0, x: 0, y: 0 }
+    return
+  }
+  const now = Date.now()
+  const isDouble = now - lastTapInfo.time < DOUBLE_TAP_DELAY &&
+    Math.abs(event.clientX - lastTapInfo.x) < DOUBLE_TAP_DISTANCE &&
+    Math.abs(event.clientY - lastTapInfo.y) < DOUBLE_TAP_DISTANCE
+  lastTapInfo = { time: now, x: event.clientX, y: event.clientY }
+  if (isDouble) {
+    lastTapInfo = { time: 0, x: 0, y: 0 }
+    handleDoubleZoom(event.clientX, event.clientY)
+  }
+}
+
+// 双指缩放内容（落在画面区域上的双指手势）
+let stagePinch = null
+
+const onStageTouchStart = (event) => {
+  if (event.touches.length !== 2) return
+  if (!['image', 'video'].includes(currentFileType.value)) return
+  pinching.value = true
+  stagePinch = {
+    distance: touchDistance(event.touches) || 1,
+    zoom: zoom.value,
+    centerX: (event.touches[0].clientX + event.touches[1].clientX) / 2,
+    centerY: (event.touches[0].clientY + event.touches[1].clientY) / 2
+  }
+}
+
+const onStageTouchMove = (event) => {
+  if (!stagePinch || event.touches.length !== 2) return
+  if (event.cancelable) event.preventDefault()
+  const ratio = touchDistance(event.touches) / stagePinch.distance
+  applyZoom(stagePinch.zoom * ratio, stagePinch.centerX, stagePinch.centerY)
+}
+
+const onStageTouchEnd = (event) => {
+  if (event.touches && event.touches.length >= 2) return
+  if (!stagePinch) return
+  stagePinch = null
+  pinching.value = false
+  clampPan()
+}
+
+// 单指/鼠标拖动平移（仅在已放大时生效）
+let panState = null
+
+const onPanStart = (event) => {
+  if (zoom.value <= ZOOM_EPSILON) return
+  if (!['image', 'video'].includes(currentFileType.value)) return
+  if (event.pointerType === 'mouse' && event.button !== 0) return
+  panState = {
+    startX: event.clientX,
+    startY: event.clientY,
+    panX: panX.value,
+    panY: panY.value
+  }
+  panning.value = true
+  window.addEventListener('pointermove', onPanMove)
+  window.addEventListener('pointerup', onPanEnd)
+  window.addEventListener('pointercancel', onPanEnd)
+}
+
+const onPanMove = (event) => {
+  if (!panState) return
+  panX.value = panState.panX + (event.clientX - panState.startX)
+  panY.value = panState.panY + (event.clientY - panState.startY)
+  clampPan()
+}
+
+const onPanEnd = () => {
+  if (!panState) return
+  panState = null
+  panning.value = false
+  window.removeEventListener('pointermove', onPanMove)
+  window.removeEventListener('pointerup', onPanEnd)
+  window.removeEventListener('pointercancel', onPanEnd)
+}
+
+// 视频：点击播放/暂停；已放大时拖动只是平移，不误触发播放切换
+const onVideoClick = () => {
+  if (zoom.value > ZOOM_EPSILON) return
+  togglePlay()
 }
 
 // ---------- 视频控制 ----------
@@ -633,6 +837,7 @@ const open = () => {
   currentIndex.value = Math.min(Math.max(props.initialIndex || 0, 0), lastIndex)
   loadSavedSize()
   resetMediaState()
+  resetZoom()
   visible.value = true
   document.body.style.overflow = 'hidden'
   startPlayback()
@@ -641,6 +846,7 @@ const open = () => {
 const close = () => {
   if (!visible.value) return
   pauseMedia()
+  resetZoom()
   visible.value = false
   document.body.style.overflow = ''
   if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {})
@@ -655,6 +861,7 @@ const stepTo = (index) => {
   pauseMedia()
   currentIndex.value = index
   resetMediaState()
+  resetZoom()
   startPlayback()
 }
 
@@ -858,13 +1065,13 @@ defineExpose({ open, close })
 }
 
 .fv-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
   user-select: none;
+  will-change: transform;
+  transform-origin: center center;
 }
 
 .fv-video {
@@ -874,6 +1081,37 @@ defineExpose({ open, close })
   background: #000;
   display: block;
   cursor: pointer;
+  will-change: transform;
+  transform-origin: center center;
+}
+
+/* 已放大时：可以拖动平移 */
+.fv-stage.is-zoomed {
+  cursor: grab;
+}
+
+.fv-stage.is-zoomed.is-panning {
+  cursor: grabbing;
+}
+
+.fv-stage.is-zoomed .fv-video {
+  cursor: grab;
+}
+
+/* 缩放比例提示 */
+.fv-zoom-badge {
+  position: absolute;
+  left: 12px;
+  bottom: 54px;
+  z-index: 7;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
 }
 
 .fv-frame {
