@@ -253,7 +253,13 @@ async def merge_chunks(request: Request):
         if is_image_file(filename) and get_file_extension(filename) != '.png':
             from tools import change_image_file_extension
             filename = change_image_file_extension(config['UPLOAD_FOLDER'], filename)
-        
+
+        # 视频：无损重封装（-c copy），把索引 moov 搬到文件头
+        # 否则浏览器要拉完整个文件才能读到时长，表现为 0:00/0:00 卡几秒、拖进度迟钝
+        if is_video_file(filename) and get_file_extension(filename) == '.mp4':
+            from tools import optimize_video_for_web
+            optimize_video_for_web(os.path.join(config['UPLOAD_FOLDER'], filename))
+
         # 异步生成缩略图
         thread = Thread(target=making_tiny_files, args=([filename],))
         thread.start()
@@ -293,6 +299,11 @@ async def direct_upload(
         elif is_video_file(filename) and get_file_extension(filename) != '.mp4':
             from tools import change_video_file_extension
             filename = change_video_file_extension(config['UPLOAD_FOLDER'], filename)
+
+        # 视频：无损重封装，把索引 moov 搬到文件头（浏览器秒读时长、拖动更顺）
+        if is_video_file(filename) and get_file_extension(filename) == '.mp4':
+            from tools import optimize_video_for_web
+            optimize_video_for_web(os.path.join(config['UPLOAD_FOLDER'], filename))
         
         # 异步生成缩略图
         thread = Thread(target=making_tiny_files, args=([filename],))

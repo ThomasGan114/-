@@ -172,6 +172,73 @@ def making_tiny_files(filenames, tiny_folder: str = "static/tiny_files"):
     return done
 
 
+def optimize_video_for_web(input_path: str, timeout: int = 300) -> bool:
+    """把 mp4 的索引（moov atom）搬到文件头，让浏览器秒读时长、拖动进度更快
+
+    为什么需要：ffmpeg / 手机默认把 moov 写在文件尾部，浏览器必须（至少）下载完
+    整个文件才能读到时长和关键帧位置 —— 表现就是预览窗里 `0:00/0:00` 要等好几秒，
+    拖动进度条也很迟钝。`-c copy` 是无损重封装（不重新编码，几乎瞬间完成），
+    只改变封装结构。
+
+    安全措施：先写临时文件，成功且非空才替换原文件；失败时原文件保持不变。
+    """
+    if not os.path.isfile(input_path):
+        return False
+    if shutil.which('ffmpeg') is None:
+        print('未找到 ffmpeg，跳过 faststart 重封装')
+        return False
+
+    temp_path = f"{input_path}.faststart.tmp.mp4"
+    command = [
+        'ffmpeg', '-hide_banner', '-loglevel', 'error',
+        '-i', input_path,
+        '-c', 'copy',
+        '-movflags', '+faststart',
+        '-y', temp_path,
+    ]
+    try:
+        subprocess.run(command, check=True, capture_output=True, timeout=timeout)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as error:
+        print(f"视频重封装失败 {os.path.basename(input_path)}: {error}")
+        _silent_remove(temp_path)
+        return False
+
+    if not os.path.isfile(temp_path) or os.path.getsize(temp_path) == 0:
+        print(f"视频重封装产物为空 {os.path.basename(input_path)}")
+        _silent_remove(temp_path)
+        return False
+
+    try:
+        os.replace(temp_path, input_path)
+    except OSError as error:
+        print(f"视频重封装替换失败 {os.path.basename(input_path)}: {error}")
+        _silent_remove(temp_path)
+        return False
+    return True
+
+
+def mp4_moov_is_front(path: str, scan_bytes: int = 2 * 1024 * 1024) -> Optional[bool]:
+    """判断 mp4 的 moov 是否在 mdat 之前（即是否已 faststart）
+
+    只读文件开头一小段来定位前两个 box，避免读整个大文件。
+    读不出来（非 mp4 / 结构异常）返回 None。
+    """
+    try:
+        with open(path, 'rb') as handle:
+            head = handle.read(scan_bytes)
+    except OSError:
+        return None
+    moov_at = head.find(b'moov')
+    mdat_at = head.find(b'mdat')
+    if moov_at == -1 and mdat_at == -1:
+        return None
+    if moov_at == -1:
+        return False
+    if mdat_at == -1:
+        return True
+    return moov_at < mdat_at
+
+
 def make_video_poster(input_file: str, output_file: str, height: int = 100) -> bool:
     """抽取视频的**有画面感的一帧**作为预览图（高度与图片缩略图一致）
 
